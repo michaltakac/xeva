@@ -20,7 +20,7 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "types": ["bun", "@types/react", "@types/react-dom", "@types/three"]
+    "types": ["@types/react", "@types/react-dom", "@types/three"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "tests", "examples"]

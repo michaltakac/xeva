@@ -29,8 +29,13 @@ export function XRPanel({
   // Subscribe to store changes
   useEffect(() => {
     const updateControls = () => {
-      setControls(store.getState().getAllControls())
+      const allControls = store.getState().getAllControls()
+      console.log('XRPanel: Controls updated', allControls)
+      setControls(allControls)
     }
+    
+    // Initial log
+    console.log('XRPanel: Initial controls', controls)
     
     // Listen for any state change
     const unsubscribe = store.subscribe(updateControls)
@@ -67,10 +72,15 @@ export function XRPanel({
   
   const renderControl = (control: typeof controls[0]) => {
     const impl = getControlImpl(control.type)
-    if (!impl) return null
+    console.log('XRPanel: Rendering control', control.key, 'type:', control.type, 'impl:', impl)
+    if (!impl) {
+      console.warn('XRPanel: No implementation for control type:', control.type)
+      return null
+    }
     
     const Component = impl.component
     const value = store.getState().getValue(control.path.join('.'))
+    console.log('XRPanel: Control value:', value)
     
     return (
       <Component
@@ -82,6 +92,10 @@ export function XRPanel({
     )
   }
   
+  // Ensure width and height are valid numbers
+  const safeWidth = typeof width === 'number' && !isNaN(width) ? width : 2
+  const safeHeight = typeof height === 'number' && !isNaN(height) ? height : 3
+  
   return (
     <group
       ref={rootRef}
@@ -91,7 +105,7 @@ export function XRPanel({
     >
       {/* Background plane for double-sided visibility */}
       <mesh position={[0, 0, -0.005]}>
-        <planeGeometry args={[width + 0.1, height + 0.1]} />
+        <planeGeometry args={[safeWidth + 0.1, safeHeight + 0.1]} />
         <meshStandardMaterial 
           color="#0a0a0a" 
           side={THREE.DoubleSide}
@@ -104,7 +118,7 @@ export function XRPanel({
       
       {/* Border frame */}
       <mesh position={[0, 0, -0.01]}>
-        <planeGeometry args={[width + 0.15, height + 0.15]} />
+        <planeGeometry args={[safeWidth + 0.15, safeHeight + 0.15]} />
         <meshStandardMaterial 
           color="#1a1a1a" 
           side={THREE.DoubleSide}
@@ -114,8 +128,8 @@ export function XRPanel({
       </mesh>
       
       <Root
-        width={width}
-        height={height}
+        width={safeWidth}
+        height={safeHeight}
         pixelSize={0.01}
         pointerEventsOrder={pointerEventsOrder}
         backgroundColor="#0a0a0a"

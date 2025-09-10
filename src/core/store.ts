@@ -1,7 +1,7 @@
 // Based on: https://zustand.docs.pmnd.rs/guides/vanilla-store
 // R3F events: https://r3f.docs.pmnd.rs/api/events
 
-import { createStore } from 'zustand/vanilla'
+import { createStore } from 'zustand'
 import type { 
   ControlsSchema, 
   ParsedControl, 
