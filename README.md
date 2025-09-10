@@ -286,7 +286,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-MIT © [Your Name]
+MIT © Michal Takáč
 
 ## Acknowledgments
 
