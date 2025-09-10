@@ -1,0 +1,11 @@
+[install]
+peer = false
+optional = false
+
+[test]
+preload = ["./tests/setup.ts"]
+coverage = true
+coverageThreshold = { line = 0.8, function = 0.8, statement = 0.8, branch = 0.7 }
+
+[run]
+silent = false
