@@ -1,6 +1,6 @@
 {
   "name": "xeva",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Leva-style API for 3D, XR-ready controls in React Three Fiber apps",
   "author": "Michal Takac",
   "license": "MIT",
