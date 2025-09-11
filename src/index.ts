@@ -1,32 +1,27 @@
 // XEVA - Leva-style API for 3D, XR-ready controls in React Three Fiber
 // Docs: https://github.com/michaltakac/xeva
 
-// Core hooks
-export { useXRControls, useXRStore } from './core/hooks'
+// Main hook - Leva-like API
+export { useControls, useXevaStore } from './core/useControls'
+export type { ControlValue, ControlConfig, FolderConfig, ControlsSchema } from './core/useControls'
 
-// Panels
+// Main panel component
+export { XevaPanel } from './components/XevaPanel'
+
+// Legacy exports (for backwards compatibility)
+export { useXRControls, useXRStore } from './core/hooks'
 export { XRPanel } from './panels/XRPanel'
 export { XRHUDPanel } from './panels/XRHUDPanel'
-
-// Provider
 export { XRControlsProvider } from './core/provider'
-
-// Plugin API
 export { registerControl } from './core/plugins'
-
-// Store (advanced usage)
 export { createXRControlsStore, getGlobalStore } from './core/store'
 export type { XRControlsStore } from './core/store'
 
 // Types
 export type {
-  ControlsSchema,
-  ControlValue,
-  ControlConfig,
   ControlType,
   ControlImpl,
   ParsedControl,
-  FolderConfig,
   XRPanelProps,
   XRHUDPanelProps,
   XRTheme
