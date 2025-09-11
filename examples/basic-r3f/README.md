@@ -1,6 +1,6 @@
-# XEVA 3D UI Kitchen Sink Demo
+# React Three Fiber UIKit Demo
 
-A comprehensive showcase of XEVA's 3D UI components integrated with React Three Fiber, demonstrating real-time control of 3D objects, materials, animations, and scene properties.
+A comprehensive 3D control panel demo built with React Three Fiber and @react-three/uikit-default, demonstrating real-time control of 3D objects, materials, animations, and scene properties.
 
 ## Features
 
@@ -39,11 +39,13 @@ A comprehensive showcase of XEVA's 3D UI components integrated with React Three 
 - Smooth damping for fluid movement
 - Distance constraints
 
-### 🎛️ Panel Settings
-- Panel positioning: left, right, or floating
-- Scale and opacity controls
-- Billboard mode (face camera)
-- Real-time updates
+### 🎛️ Tabbed Interface
+The control panel is organized into 5 intuitive tabs:
+1. **Geometry** - Shape, size, segments, and position controls
+2. **Material** - Color, metalness, roughness, and other material properties
+3. **Animation** - Rotation, float, and pulse effect controls
+4. **Particles** - Particle system configuration
+5. **Extras** - Secondary objects and scene settings
 
 ## Running the Example
 
@@ -63,11 +65,11 @@ npm run build
 
 ## Technologies Used
 
-- **XEVA**: 3D UI control system
 - **React Three Fiber**: React renderer for Three.js
-- **Three.js**: 3D graphics library
+- **@react-three/uikit**: UI system for 3D environments
+- **@react-three/uikit-default**: Default UI components
 - **@react-three/drei**: Useful helpers for R3F
-- **Zustand**: State management
+- **Three.js**: 3D graphics library
 - **TypeScript**: Type safety
 - **Vite**: Build tool and dev server
 
@@ -83,21 +85,25 @@ npm run build
 
 The example demonstrates:
 - Component composition with React Three Fiber
-- State management with XEVA's `useXRControls` hook
-- Real-time 3D manipulation
+- State management with React hooks
+- Real-time 3D manipulation using @react-three/uikit
 - Performance optimization with `useMemo` and `useFrame`
 - Material and geometry switching
 - Particle systems and animations
 - Environment and lighting control
 - Camera manipulation
 
+## Files
+
+- `EnhancedUIKitDemo.tsx` - Full-featured demo with tabbed interface
+- `UIKitDemo.tsx` - Simpler version with basic controls
+- `main.tsx` - Entry point (switch between demos here)
+
 ## Key Components
 
-1. **HeroObject**: Main interactive 3D object with comprehensive material and animation controls
+1. **Hero3DObject**: Main interactive 3D object with comprehensive material and animation controls
 2. **ParticleSystem**: Dynamic particle effects with wave animations
-3. **SceneEnvironment**: Complete environment setup with lighting, fog, and reflections
-4. **SecondaryObjects**: Additional shapes demonstrating arrangement patterns
-5. **CameraController**: Camera settings and orbit controls
-6. **XRPanel**: XEVA's 3D control panel rendered in the scene
+3. **SecondaryObjects**: Additional floating shapes with individual colors
+4. **ControlPanel**: UIKit-based 3D control panel with tabbed interface
 
-This example serves as a complete reference implementation for integrating XEVA with React Three Fiber applications.
+This example serves as a complete reference implementation for building 3D UI controls with React Three Fiber and @react-three/uikit.

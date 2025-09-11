@@ -722,7 +722,7 @@ function Scene() {
 }
 
 // Main App
-function EnhancedUIKitDemo() {
+function XevaUIDemo() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#000' }}>
       <Canvas
@@ -747,4 +747,4 @@ function EnhancedUIKitDemo() {
   )
 }
 
-export default EnhancedUIKitDemo
+export default XevaUIDemo

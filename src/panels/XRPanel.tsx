@@ -29,13 +29,8 @@ export function XRPanel({
   // Subscribe to store changes
   useEffect(() => {
     const updateControls = () => {
-      const allControls = store.getState().getAllControls()
-      console.log('XRPanel: Controls updated', allControls)
-      setControls(allControls)
+      setControls(store.getState().getAllControls())
     }
-    
-    // Initial log
-    console.log('XRPanel: Initial controls', controls)
     
     // Listen for any state change
     const unsubscribe = store.subscribe(updateControls)
@@ -72,15 +67,10 @@ export function XRPanel({
   
   const renderControl = (control: typeof controls[0]) => {
     const impl = getControlImpl(control.type)
-    console.log('XRPanel: Rendering control', control.key, 'type:', control.type, 'impl:', impl)
-    if (!impl) {
-      console.warn('XRPanel: No implementation for control type:', control.type)
-      return null
-    }
+    if (!impl) return null
     
     const Component = impl.component
     const value = store.getState().getValue(control.path.join('.'))
-    console.log('XRPanel: Control value:', value)
     
     return (
       <Component
