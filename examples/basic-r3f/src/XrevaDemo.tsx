@@ -12,7 +12,7 @@ import {
   Torus,
   Cone
 } from '@react-three/drei'
-import { useControls, XevaPanel } from 'xreva'
+import { useControls, XrevaPanel } from 'xreva'
 import * as THREE from 'three'
 
 // Main controllable 3D object using XREVA controls
@@ -379,7 +379,7 @@ function Scene() {
       </Text>
       
       {/* XEVA Control Panel - uses the new component */}
-      <XevaPanel 
+      <XrevaPanel 
         position={[4.5, 0, 0]}
         title="XEVA Controls"
         tabs={true}
@@ -417,4 +417,4 @@ function XrevaDemo() {
   )
 }
 
-export default XevaDemo
+export default XrevaDemo
