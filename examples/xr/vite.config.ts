@@ -11,7 +11,7 @@ export default defineConfig({
   resolve: {
     alias: {
       // Point to source files instead of built files to avoid module issues
-      'xeva': resolve(__dirname, '../../src/index.ts')
+      'xreva': resolve(__dirname, '../../src/index.ts')
     },
     dedupe: ['react', 'react-dom', 'three']
   },
@@ -33,5 +33,5 @@ export default defineConfig({
     sourcemap: true
   },
   root: __dirname,
-  cacheDir: resolve(__dirname, '../../node_modules/.vite/xr-quest3')
+  cacheDir: resolve(__dirname, '../../node_modules/.vite/xr')
 })

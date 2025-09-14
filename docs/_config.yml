@@ -1,7 +1,7 @@
 # GitHub Pages configuration
-title: XEVA Documentation
+title: XREVA Documentation
 description: Leva-style API for 3D, XR-ready controls in React Three Fiber apps
-baseurl: "/xeva"
+baseurl: "/xreva"
 url: "https://michaltakac.github.io"
 
 # Build settings

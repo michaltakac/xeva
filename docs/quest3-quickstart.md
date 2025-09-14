@@ -2,18 +2,18 @@
 
 ## Option 1: Automatic Setup (Recommended)
 ```bash
-cd examples/xr-quest3
+cd examples/xr
 ./setup.sh
 npm run dev
 ```
 
 ## Option 2: Manual Setup
 ```bash
-# 1. Build Xeva
+# 1. Build Xreva
 npm run build
 
 # 2. Go to demo
-cd examples/xr-quest3
+cd examples/xr
 npm install
 
 # 3. Generate SSL cert (required for WebXR)

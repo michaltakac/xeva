@@ -1,28 +1,33 @@
-// XEVA - Leva-style API for 3D, XR-ready controls in React Three Fiber
-// Docs: https://github.com/michaltakac/xeva
+// XREVA - Leva-style API for 3D, XR-ready controls in React Three Fiber
+// Docs: https://github.com/michaltakac/xreva
 
 // Main hook - Leva-like API
-export { useControls, useXevaStore } from './core/useControls'
-export type { ControlValue, ControlConfig, FolderConfig, ControlsSchema } from './core/useControls'
+export { useControls, useXrevaStore } from "./core/useControls";
+export type {
+  ControlValue,
+  ControlConfig,
+  FolderConfig,
+  ControlsSchema,
+} from "./core/useControls";
 
 // Main panel components
-export { XevaPanel } from './components/XevaPanel'
-export { XevaPanelXR } from './components/XevaPanelXR'
+export { XrevaPanel } from "./components/XrevaPanel";
+export { XrevaPanelXR } from "./components/XrevaPanelXR";
 
 // XR hooks
-export { useXRGrab } from './xr/useXRGrab'
-export { useHandTracking } from './xr/useHandTracking'
-export { useSpatialAnchor } from './xr/useSpatialAnchor'
-export { useDualHandInteraction } from './xr/useDualHandInteraction'
+export { useXRGrab } from "./xr/useXRGrab";
+export { useHandTracking } from "./xr/useHandTracking";
+export { useSpatialAnchor } from "./xr/useSpatialAnchor";
+export { useDualHandInteraction } from "./xr/useDualHandInteraction";
 
 // Legacy exports (for backwards compatibility)
-export { useXRControls, useXRStore } from './core/hooks'
-export { XRPanel } from './panels/XRPanel'
-export { XRHUDPanel } from './panels/XRHUDPanel'
-export { XRControlsProvider } from './core/provider'
-export { registerControl } from './core/plugins'
-export { createXRControlsStore, getGlobalStore } from './core/store'
-export type { XRControlsStore } from './core/store'
+export { useXRControls, useXRStore } from "./core/hooks";
+export { XRPanel } from "./panels/XRPanel";
+export { XRHUDPanel } from "./panels/XRHUDPanel";
+export { XRControlsProvider } from "./core/provider";
+export { registerControl } from "./core/plugins";
+export { createXRControlsStore, getGlobalStore } from "./core/store";
+export type { XRControlsStore } from "./core/store";
 
 // Types
 export type {
@@ -31,8 +36,8 @@ export type {
   ParsedControl,
   XRPanelProps,
   XRHUDPanelProps,
-  XRTheme
-} from './core/types'
+  XRTheme,
+} from "./core/types";
 
 // Auto-register default controls on import
-import './core/register'
+import "./core/register";

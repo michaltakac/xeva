@@ -2,7 +2,7 @@
 
 ## ✨ What's New: Dual-Hand Mode
 
-The Xeva panel now supports **dual-hand interaction** where:
+The Xreva panel now supports **dual-hand interaction** where:
 - **LEFT hand** = Grab and move the panel
 - **RIGHT hand** = Interact with controls (sliders, buttons, etc.)
 
@@ -11,11 +11,11 @@ This allows you to hold the panel steady with your left hand while precisely int
 ## 🚀 Quick Start
 
 ```bash
-# 1. Build Xeva
+# 1. Build Xreva
 npm run build
 
 # 2. Run the demo
-cd examples/xr-quest3
+cd examples/xr
 npm install
 npm run dev
 ```
@@ -72,7 +72,7 @@ npm run dev
 
 ### Enable Dual-Hand Mode
 ```tsx
-<XevaPanelXR
+<XrevaPanelXR
   dualHandMode={true}  // Enable dual-hand interaction
   position={[1.5, 1.5, -2]}
   title="My Controls"
@@ -81,7 +81,7 @@ npm run dev
 
 ### Customize Hand Roles
 ```tsx
-<XevaPanelXR
+<XrevaPanelXR
   dualHandMode={true}
   grabbable={{
     enabled: true,
@@ -93,7 +93,7 @@ npm run dev
 
 ### Use the Hook Directly
 ```tsx
-import { useDualHandInteraction } from 'xeva'
+import { useDualHandInteraction } from 'xreva'
 
 function MyComponent() {
   const ref = useRef()

@@ -12,10 +12,10 @@ import {
   Torus,
   Cone
 } from '@react-three/drei'
-import { useControls, XevaPanel } from 'xeva'
+import { useControls, XevaPanel } from 'xreva'
 import * as THREE from 'three'
 
-// Main controllable 3D object using XEVA controls
+// Main controllable 3D object using XREVA controls
 function Hero3DObject() {
   const meshRef = useRef<THREE.Mesh>(null)
   const groupRef = useRef<THREE.Group>(null)
@@ -150,7 +150,7 @@ function Hero3DObject() {
   )
 }
 
-// Particle System with XEVA controls
+// Particle System with XREVA controls
 function ParticleSystem() {
   const pointsRef = useRef<THREE.Points>(null)
   const groupRef = useRef<THREE.Group>(null)
@@ -392,7 +392,7 @@ function Scene() {
 }
 
 // Main App using refactored XEVA
-function XevaDemo() {
+function XrevaDemo() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#000' }}>
       <Canvas

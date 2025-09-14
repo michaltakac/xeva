@@ -10,8 +10,8 @@ import {
   Sphere,
   Torus
 } from '@react-three/drei'
-// Import from xeva package (aliased to src in vite config)
-import { useControls, XevaPanelXR } from 'xeva'
+// Import from xreva package (aliased to src in vite config)
+import { useControls, XrevaPanelXR } from 'xreva'
 import * as THREE from 'three'
 
 // XR Store for managing XR session
@@ -26,7 +26,7 @@ const xrStore = createXRStore({
   domOverlay: true
 })
 
-// Main controllable 3D object with XEVA controls
+// Main controllable 3D object with XREVA controls
 function InteractiveObject() {
   const meshRef = useRef<THREE.Mesh>(null!)
   
@@ -181,7 +181,7 @@ function XRScene() {
       
       {/* Floating panel - dual-hand mode: left grabs, right interacts */}
       {panelMode === 'floating' && (
-        <XevaPanelXR
+        <XrevaPanelXR
           position={[1.5, 1.5, -2]}
           rotation={[0, -0.3, 0]}
           title="XR Controls (Dual-Hand)"
@@ -220,7 +220,7 @@ function XRScene() {
       
       {/* Wall-anchored panel */}
       {panelMode === 'anchored' && (
-        <XevaPanelXR
+        <XrevaPanelXR
           position={[0, 1.5, -4.5]}
           title="Wall Panel"
           tabs={false}
@@ -244,7 +244,7 @@ function XRScene() {
       {/* Controller-attached panel */}
       {panelMode === 'handheld' && (
         <>
-          <XevaPanelXR
+          <XrevaPanelXR
             position={[0, 0, 0]}
             title="Left Hand"
             tabs={false}
@@ -261,7 +261,7 @@ function XRScene() {
             scale={0.5}
           />
           
-          <XevaPanelXR
+          <XrevaPanelXR
             position={[0, 0, 0]}
             title="Right Hand"
             tabs={false}
@@ -333,7 +333,7 @@ function XRScene() {
         anchorX="center"
         anchorY="middle"
       >
-        XEVA XR Demo - Quest 3
+        XREVA XR Demo - Quest 3
       </Text>
       
       <Text

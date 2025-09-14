@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2025-09-14
+
+### Changed
+- **BREAKING**: Renamed package from `xeva` to `xreva` for NPM availability
+- Updated all component names to use `Xreva` prefix:
+  - `XevaPanel` → `XrevaPanel`
+  - `XevaPanelXR` → `XrevaPanelXR`
+  - `useXevaStore` → `useXrevaStore`
+- Updated all documentation and examples to reflect new naming
+- Changed GitHub repository references to `michaltakac/xreva`
+
+### Fixed
+- Fixed all TypeScript errors across the codebase
+- Fixed unused import warnings
+- Fixed RefObject type issues in XR hooks
+- Fixed uikit property compatibility issues in widgets
+- Fixed controller/hands property access in XR hooks
+- Corrected build output file names (`.mjs` and `.cjs`)
+
+### Added
+- Added comprehensive NPM publishing documentation
+- Added pre-publish check script for release validation
+- Added GitHub Pages documentation site
+- Added `.npmignore` for optimized package distribution
+- Added support for automated releases via GitHub Actions
+
+### Development
+- Updated CI/CD workflows for proper monorepo structure
+- Added test coverage reporting to CI pipeline
+- Improved build scripts for examples
+- Added development scripts for XR example
+
 ## [0.2.0] - 2025-09-10
 
 ### Added
@@ -45,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Initial release of XEVA
+- Initial release of XREVA
 - `useXRControls` hook with Leva-compatible API
 - `XRPanel` component for world-anchored control panels
 - `XRHUDPanel` component for camera-locked HUD panels

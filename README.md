@@ -1,17 +1,17 @@
-# XEVA
+# XREVA
 
 > Leva-style API for 3D, XR-ready controls in React Three Fiber apps
 
-[![CI](https://github.com/michaltakac/xeva/actions/workflows/ci.yml/badge.svg)](https://github.com/michaltakac/xeva/actions/workflows/ci.yml)
-[![npm version](https://badge.fury.io/js/xeva.svg)](https://badge.fury.io/js/xeva)
+[![CI](https://github.com/michaltakac/xreva/actions/workflows/ci.yml/badge.svg)](https://github.com/michaltakac/xreva/actions/workflows/ci.yml)
+[![npm version](https://badge.fury.io/js/xreva.svg)](https://badge.fury.io/js/xreva)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://michaltakac.github.io/xeva/)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://michaltakac.github.io/xreva/)
 
-XEVA provides a familiar Leva-like developer experience for creating interactive 3D control panels in React Three Fiber applications, with first-class support for XR (VR/AR) environments.
+XREVA provides a familiar Leva-like developer experience for creating interactive 3D control panels in React Three Fiber applications, with first-class support for XR (VR/AR) environments.
 
 ## Features
 
-- **Leva-compatible API** - If you know Leva, you already know XEVA
+- **Leva-compatible API** - If you know Leva, you already know XREVA
 - **XR-first design** - Built on @react-three/uikit for perfect XR interoperability
 - **3D panels** - World-anchored or HUD panels that work in 3D space
 - **Shadcn theming** - Beautiful defaults via @react-three/uikit-default
@@ -22,9 +22,9 @@ XEVA provides a familiar Leva-like developer experience for creating interactive
 ## Installation
 
 ```bash
-npm install xeva
+npm install xreva
 # or
-bun add xeva
+bun add xreva
 ```
 
 ### Peer Dependencies
@@ -37,7 +37,7 @@ npm install react react-dom three @react-three/fiber @react-three/xr @react-thre
 
 ```tsx
 import { Canvas } from '@react-three/fiber'
-import { XRPanel, useXRControls } from 'xeva'
+import { XRPanel, useXRControls } from 'xreva'
 
 function Scene() {
   const { color, roughness, speed } = useXRControls('Material', {
@@ -69,7 +69,7 @@ export default function App() {
 ```tsx
 import { Canvas } from '@react-three/fiber'
 import { XR, createXRStore } from '@react-three/xr'
-import { XRPanel, XRHUDPanel, useXRControls } from 'xeva'
+import { XRPanel, XRHUDPanel, useXRControls } from 'xreva'
 
 const xrStore = createXRStore()
 
@@ -216,7 +216,7 @@ Optional provider for theming and custom stores:
 Register custom control types:
 
 ```tsx
-import { registerControl } from 'xeva'
+import { registerControl } from 'xreva'
 
 registerControl('custom', {
   type: 'custom',
@@ -274,7 +274,7 @@ bun run typecheck
 
 ## Architecture
 
-XEVA is built on:
+XREVA is built on:
 - [@react-three/uikit](https://pmndrs.github.io/uikit/) - WebGL UI components
 - [@react-three/uikit-default](https://github.com/pmndrs/uikit) - Shadcn-based theme
 - [@react-three/xr](https://pmndrs.github.io/xr/) - XR integration

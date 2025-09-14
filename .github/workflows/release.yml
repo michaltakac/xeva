@@ -10,7 +10,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: github.repository == 'michaltakac/xeva'
+    if: github.repository == 'michaltakac/xreva'
     
     steps:
       - uses: actions/checkout@v4

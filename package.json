@@ -1,6 +1,6 @@
 {
-  "name": "xeva",
-  "version": "0.2.0",
+  "name": "xreva",
+  "version": "0.2.1",
   "description": "Leva-style API for 3D, XR-ready controls in React Three Fiber apps",
   "author": "Michal Takac",
   "license": "MIT",
@@ -16,13 +16,13 @@
     "uikit",
     "leva"
   ],
-  "homepage": "https://github.com/michaltakac/xeva#readme",
+  "homepage": "https://github.com/michaltakac/xreva#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/michaltakac/xeva.git"
+    "url": "git+https://github.com/michaltakac/xreva.git"
   },
   "bugs": {
-    "url": "https://github.com/michaltakac/xeva/issues"
+    "url": "https://github.com/michaltakac/xreva/issues"
   },
   "type": "module",
   "main": "./dist/index.cjs",
@@ -47,7 +47,7 @@
     "dev:xr": "vite serve examples/xr",
     "build": "bun run build:bundle && bun run build:types",
     "build:examples": "vite build examples/basic-r3f && vite build examples/xr",
-    "build:bundle": "bun build ./src/index.ts --outdir ./dist --format esm --target browser --external react --external react-dom --external three --external @react-three/fiber --external @react-three/xr --external @react-three/uikit --external @react-three/uikit-default --external zustand && bun build ./src/index.ts --outdir ./dist --format cjs --target browser --external react --external react-dom --external three --external @react-three/fiber --external @react-three/xr --external @react-three/uikit --external @react-three/uikit-default --external zustand",
+    "build:bundle": "bun build ./src/index.ts --outfile ./dist/index.mjs --format esm --target browser --external react --external react-dom --external three --external @react-three/fiber --external @react-three/xr --external @react-three/uikit --external @react-three/uikit-default --external zustand && bun build ./src/index.ts --outfile ./dist/index.cjs --format cjs --target browser --external react --external react-dom --external three --external @react-three/fiber --external @react-three/xr --external @react-three/uikit --external @react-three/uikit-default --external zustand",
     "build:types": "tsc --emitDeclarationOnly",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
@@ -55,6 +55,7 @@
     "test:coverage": "bun test --coverage",
     "lint": "eslint src --ext .ts,.tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "prepublish:check": "node scripts/pre-publish-check.js",
     "release": "changeset publish",
     "changeset": "changeset"
   },

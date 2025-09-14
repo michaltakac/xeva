@@ -1,15 +1,15 @@
 #!/bin/bash
 
-echo "🚀 Setting up Xeva XR Demo"
+echo "🚀 Setting up Xreva XR Demo"
 echo "======================================"
 
 # Build the main library first
-echo "📦 Building Xeva library..."
+echo "📦 Building Xreva library..."
 cd ../..
 npm run build
 
 # Return to demo directory
-cd examples/xr-quest3
+cd examples/xr
 
 # Install dependencies
 echo "📦 Installing dependencies..."

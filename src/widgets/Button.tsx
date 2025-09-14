@@ -1,28 +1,25 @@
 // UIKit button with R3F events: https://r3f.docs.pmnd.rs/api/events
 
-import { Container, Text } from '@react-three/uikit'
-import type { ParsedControl } from '../core/types'
+import { Container, Text } from "@react-three/uikit";
+import type { ParsedControl } from "../core/types";
 
 interface ButtonProps {
-  control: ParsedControl
-  value: (() => void) | undefined
-  onChange: (value: any) => void
+  control: ParsedControl;
+  value: (() => void) | undefined;
+  onChange: (value: any) => void;
 }
 
 export function Button({ control, value }: ButtonProps) {
-  const { label } = control.config
-  
+  const { label } = control.config;
+
   const handleClick = () => {
-    if (typeof value === 'function') {
-      value()
+    if (typeof value === "function") {
+      value();
     }
-  }
-  
+  };
+
   return (
-    <Container
-      padding={8}
-      width="100%"
-    >
+    <Container padding={8} width="100%">
       <Container
         padding={12}
         backgroundColor="#0ea5e9"
@@ -31,10 +28,10 @@ export function Button({ control, value }: ButtonProps) {
         cursor="pointer"
         width="100%"
         hover={{
-          backgroundColor: '#0284c7'
+          backgroundColor: "#0284c7",
         }}
         active={{
-          backgroundColor: '#0369a1'
+          backgroundColor: "#0369a1",
         }}
       >
         <Text
@@ -47,5 +44,5 @@ export function Button({ control, value }: ButtonProps) {
         </Text>
       </Container>
     </Container>
-  )
+  );
 }

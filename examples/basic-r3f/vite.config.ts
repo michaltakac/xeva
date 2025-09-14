@@ -9,7 +9,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      'xeva': path.resolve(__dirname, '../../src/index.ts')
+      'xreva': path.resolve(__dirname, '../../src/index.ts')
     },
     dedupe: ['react', 'react-dom', 'three']
   },

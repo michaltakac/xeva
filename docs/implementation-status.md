@@ -1,4 +1,4 @@
-# Xeva Implementation Status
+# Xreva Implementation Status
 
 ## ✅ Fully Implemented & Working
 
@@ -10,7 +10,7 @@
 - Control types: number, boolean, string, select, color, vector3, button
 
 ### Basic 3D Panel
-- `XevaPanel` component using @react-three/uikit
+- `XrevaPanel` component using @react-three/uikit
 - Tab-based folder navigation
 - All basic control widgets working
 - Billboard mode support
@@ -24,7 +24,7 @@
   - Type mismatches with uikit components
   - Missing proper XR session management
 
-- `XevaPanelXR` component - Structure exists but:
+- `XrevaPanelXR` component - Structure exists but:
   - TypeScript errors with uikit property types
   - Button size variants don't match uikit-default API
   - Slider doesn't have 'size' prop in uikit
@@ -79,7 +79,7 @@
 
 For a working MVP, focus on:
 
-1. **Fix the core XevaPanel** - It mostly works, just needs minor fixes
+1. **Fix the core XrevaPanel** - It mostly works, just needs minor fixes
 2. **Skip XR features for now** - They need significant rework
 3. **Polish the Leva-compatible API** - This is the main value proposition
 4. **Add proper examples** - Show how to use with R3F projects

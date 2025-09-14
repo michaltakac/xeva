@@ -1,7 +1,7 @@
-# Xeva XR/VR Design Document
+# Xreva XR/VR Design Document
 
 ## Overview
-Xeva is a 3D-native GUI library for React Three Fiber, modeled after Leva's API but designed for XR/VR environments where UI panels exist in 3D space and are interactable via VR controllers or hand tracking.
+Xreva is a 3D-native GUI library for React Three Fiber, modeled after Leva's API but designed for XR/VR environments where UI panels exist in 3D space and are interactable via VR controllers or hand tracking.
 
 ## Core API (Leva-Compatible)
 
@@ -32,9 +32,9 @@ const [values, set] = useControls(() => ({
 }))
 ```
 
-### 2. XevaPanel Component (3D UI)
+### 2. XrevaPanel Component (3D UI)
 ```tsx
-<XevaPanel
+<XrevaPanel
   // 3D positioning
   position={[2, 1.5, -1]}      // Panel position in world space
   rotation={[0, -0.3, 0]}      // Panel rotation
@@ -99,7 +99,7 @@ interface HandInteractionConfig {
 ### 3. Spatial Anchoring
 ```tsx
 // Anchor panel to surfaces
-<XevaPanel
+<XrevaPanel
   anchor={{
     type: 'wall' | 'floor' | 'ceiling' | 'object',
     target?: THREE.Object3D,  // For object anchoring
@@ -112,15 +112,15 @@ interface HandInteractionConfig {
 ### 4. Multi-Panel Management
 ```tsx
 // Panel groups that move together
-<XevaPanelGroup
+<XrevaPanelGroup
   layout="horizontal" | "vertical" | "circular"
   spacing={0.5}
   centerPivot={true}
 >
-  <XevaPanel title="Main" />
-  <XevaPanel title="Settings" />
-  <XevaPanel title="Debug" />
-</XevaPanelGroup>
+  <XrevaPanel title="Main" />
+  <XrevaPanel title="Settings" />
+  <XrevaPanel title="Debug" />
+</XrevaPanelGroup>
 ```
 
 ## Control Types (XR-Optimized)
@@ -187,7 +187,7 @@ useSpatialAnchor(type)       // Anchor to surfaces
 ### 2. Store Architecture
 ```typescript
 // Zustand store with XR state
-interface XevaStore {
+interface XrevaStore {
   // Control values (Leva-compatible)
   controls: Map<string, Control>
   values: Record<string, any>
@@ -220,8 +220,8 @@ src/
     useSpatialAnchor.ts     # Spatial anchoring
     
   components/
-    XevaPanel.tsx          # Main 3D panel
-    XevaPanelGroup.tsx     # Panel groups
+    XrevaPanel.tsx          # Main 3D panel
+    XrevaPanelGroup.tsx     # Panel groups
     
   controls/
     Slider.tsx             # XR-optimized slider
@@ -248,7 +248,7 @@ function Scene() {
         <meshStandardMaterial color={color} metalness={metalness} />
       </mesh>
       
-      <XevaPanel
+      <XrevaPanel
         position={[2, 1.5, 0]}
         grabbable
         handInteractable
@@ -269,7 +269,7 @@ function XRScene() {
       <Scene />
       
       {/* Panel anchored to left controller */}
-      <XevaPanel
+      <XrevaPanel
         anchor={{
           type: 'controller',
           hand: 'left',
@@ -291,7 +291,7 @@ function HandTrackedScene() {
   
   return (
     <>
-      <XevaPanel
+      <XrevaPanel
         position={[0, 1.5, -2]}
         handInteractable={{
           enabled: true,
@@ -313,7 +313,7 @@ function HandTrackedScene() {
 ## Migration from Leva
 
 1. **API Compatibility**: Core `useControls` API remains identical
-2. **Panel Component**: Replace `<Leva />` with `<XevaPanel />` in 3D space
+2. **Panel Component**: Replace `<Leva />` with `<XrevaPanel />` in 3D space
 3. **New Features**: Add XR-specific props for grabbable, hand tracking, etc.
 4. **Store Access**: Same store pattern with additional XR state
 

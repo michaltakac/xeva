@@ -1,4 +1,4 @@
-# Xeva XR Testing Guide for Meta Quest 3
+# Xreva XR Testing Guide for Meta Quest 3
 
 ## ✅ What's Implemented
 
@@ -27,7 +27,7 @@ All XR features have been implemented and are ready for testing on your Meta Que
 - ✅ Fixed world position
 - ✅ Smooth following with configurable smoothing
 
-### 4. **XevaPanelXR Component**
+### 4. **XrevaPanelXR Component**
 - ✅ Full 3D UI panel in world space
 - ✅ Leva-compatible controls API
 - ✅ XR-optimized larger touch targets
@@ -37,15 +37,15 @@ All XR features have been implemented and are ready for testing on your Meta Que
 
 ## 🚀 Quick Test Setup
 
-### 1. Build Xeva Library
+### 1. Build Xreva Library
 ```bash
-cd /Users/michaltakac/projects/xevajs
+cd /Users/michaltakac/projects/xrevajs
 npm run build
 ```
 
 ### 2. Run XR Demo
 ```bash
-cd examples/xr-quest3
+cd examples/xr
 npm install
 npm run dev
 ```
@@ -100,7 +100,7 @@ The demo includes 3 panel modes:
 
 ### Basic Setup
 ```tsx
-import { useControls, XevaPanelXR } from 'xeva'
+import { useControls, XrevaPanelXR } from 'xreva'
 
 function MyXRScene() {
   // Leva-compatible controls
@@ -116,7 +116,7 @@ function MyXRScene() {
         <meshStandardMaterial color={color} />
       </mesh>
       
-      <XevaPanelXR
+      <XrevaPanelXR
         position={[1, 1.5, -2]}
         grabbable={true}
         handTracking={true}
@@ -128,7 +128,7 @@ function MyXRScene() {
 
 ### Advanced Configuration
 ```tsx
-<XevaPanelXR
+<XrevaPanelXR
   // Grabbable with constraints
   grabbable={{
     enabled: true,

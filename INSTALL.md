@@ -1,8 +1,8 @@
-# XEVA Installation & Setup
+# XREVA Installation & Setup
 
 ## Quick Start
 
-The XEVA library has been fully implemented with the following features:
+The XREVA library has been fully implemented with the following features:
 
 ### Core Components
 ✅ `useXRControls` hook with Leva-compatible API
@@ -72,7 +72,7 @@ bun run build
 ## Project Structure
 
 ```
-xeva/
+xreva/
 ├── src/
 │   ├── core/           # Store, hooks, plugin system
 │   │   ├── store.ts    # Zustand-based state management

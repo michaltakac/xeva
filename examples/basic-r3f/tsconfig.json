@@ -16,8 +16,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "xeva": ["../../src/index.ts"],
-      "xeva/*": ["../../src/*"]
+      "xreva": ["../../src/index.ts"],
+      "xreva/*": ["../../src/*"]
     }
   },
   "include": ["src"]
