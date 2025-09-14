@@ -46,7 +46,6 @@
     "dev": "vite serve examples/basic-r3f",
     "dev:xr": "vite serve examples/xr",
     "build": "bun run build:bundle && bun run build:types",
-    "build:examples": "vite build examples/basic-r3f && vite build examples/xr",
     "build:bundle": "bun build ./src/index.ts --outfile ./dist/index.mjs --format esm --target browser --external react --external react-dom --external three --external @react-three/fiber --external @react-three/xr --external @react-three/uikit --external @react-three/uikit-default --external zustand && bun build ./src/index.ts --outfile ./dist/index.cjs --format cjs --target browser --external react --external react-dom --external three --external @react-three/fiber --external @react-three/xr --external @react-three/uikit --external @react-three/uikit-default --external zustand",
     "build:types": "tsc --emitDeclarationOnly",
     "typecheck": "tsc --noEmit",

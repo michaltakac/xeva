@@ -6,6 +6,10 @@ on:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release:
     name: Release
@@ -22,7 +26,10 @@ jobs:
           bun-version: latest
       
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: |
+          bun install --frozen-lockfile
+          # Install the correct Rollup binary for Linux to fix CI build issues
+          bun add -d @rollup/rollup-linux-x64-gnu
       
       - name: Run tests
         run: bun test
