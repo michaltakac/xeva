@@ -1,4 +1,4 @@
-import { Suspense, useRef } from 'react'
+import { Suspense, useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { 
   OrbitControls, 
@@ -18,6 +18,7 @@ import * as THREE from 'three'
 // Main controllable 3D object using XEVA controls
 function Hero3DObject() {
   const meshRef = useRef<THREE.Mesh>(null)
+  const groupRef = useRef<THREE.Group>(null)
   
   // Using the new Leva-like API
   const {
@@ -64,17 +65,17 @@ function Hero3DObject() {
       metalness: { value: 0.5, min: 0, max: 1, step: 0.01 },
       roughness: { value: 0.5, min: 0, max: 1, step: 0.01 },
       clearcoat: { value: 0, min: 0, max: 1, step: 0.01 },
-      wireframe: false,
-      transparent: false,
+      wireframe: { value: false },
+      transparent: { value: false },
       opacity: { value: 1, min: 0, max: 1, step: 0.01 }
     },
     animation: {
-      autoRotate: true,
+      autoRotate: { value: true },
       rotationSpeed: { value: 1, min: 0, max: 5, step: 0.1 },
-      floatEffect: false,
+      floatEffect: { value: false },
       floatSpeed: { value: 1, min: 0.1, max: 5, step: 0.1 },
       floatIntensity: { value: 1, min: 0, max: 3, step: 0.1 },
-      pulse: false,
+      pulse: { value: false },
       pulseScale: { value: 0.1, min: 0, max: 0.5, step: 0.01 }
     }
   })
@@ -97,60 +98,64 @@ function Hero3DObject() {
     }
   })()
 
-  // Animation
+  // Animation using direct property manipulation to avoid re-renders
   useFrame((state, delta) => {
-    if (!meshRef.current) return
+    if (!groupRef.current) return
     
     const time = state.clock.getElapsedTime()
     
-    // Auto rotation
+    // Auto rotation - directly manipulate rotation
     if (autoRotate) {
-      meshRef.current.rotation.y += delta * rotationSpeed
-      meshRef.current.rotation.x += delta * rotationSpeed * 0.3
+      groupRef.current.rotation.y += delta * rotationSpeed
+      groupRef.current.rotation.x += delta * rotationSpeed * 0.3
     }
     
-    // Float effect
+    // Float effect - directly manipulate position
     if (floatEffect) {
-      meshRef.current.position.y = positionY + Math.sin(time * floatSpeed) * 0.3 * floatIntensity
+      groupRef.current.position.y = positionY + Math.sin(time * floatSpeed) * 0.3 * floatIntensity
     } else {
-      meshRef.current.position.y = positionY
+      groupRef.current.position.y = positionY
     }
     
-    // Pulse effect
+    // Pulse effect - directly manipulate scale
     if (pulse) {
       const pulseValue = 1 + Math.sin(time * 3) * pulseScale
-      meshRef.current.scale.setScalar(scale * pulseValue)
+      groupRef.current.scale.setScalar(scale * pulseValue)
     } else {
-      meshRef.current.scale.setScalar(scale)
+      groupRef.current.scale.setScalar(scale)
     }
   })
 
   return (
-    <mesh 
-      ref={meshRef}
-      position={[positionX, positionY, positionZ]}
-      castShadow 
-      receiveShadow
-    >
-      {geometry}
-      <meshPhysicalMaterial 
-        color={color}
-        emissive={emissive}
-        emissiveIntensity={emissiveIntensity}
-        metalness={metalness}
-        roughness={roughness}
-        clearcoat={clearcoat}
-        wireframe={wireframe}
-        transparent={transparent}
-        opacity={opacity}
-      />
-    </mesh>
+    <group ref={groupRef} position={[positionX, positionY, positionZ]}>
+      <mesh 
+        ref={meshRef}
+        castShadow 
+        receiveShadow
+      >
+        {geometry}
+        <meshPhysicalMaterial 
+          color={color}
+          emissive={emissive}
+          emissiveIntensity={emissiveIntensity}
+          metalness={metalness}
+          roughness={roughness}
+          clearcoat={clearcoat}
+          wireframe={wireframe}
+          transparent={transparent}
+          opacity={opacity}
+        />
+      </mesh>
+    </group>
   )
 }
 
 // Particle System with XEVA controls
 function ParticleSystem() {
   const pointsRef = useRef<THREE.Points>(null)
+  const groupRef = useRef<THREE.Group>(null)
+  const positionsRef = useRef<Float32Array | null>(null)
+  const initialPositionsRef = useRef<Float32Array | null>(null)
   
   const {
     particlesVisible,
@@ -161,36 +166,51 @@ function ParticleSystem() {
     particleSpeed,
     particleWave
   } = useControls('Particles', {
-    particlesVisible: true,
+    particlesVisible: { value: true },
     particleCount: { value: 500, min: 100, max: 2000, step: 100 },
     particleSize: { value: 0.05, min: 0.01, max: 0.2, step: 0.01 },
     particleColor: { value: '#ffaa00' },
     particleSpread: { value: 10, min: 5, max: 20, step: 1 },
     particleSpeed: { value: 0.5, min: 0, max: 2, step: 0.1 },
-    particleWave: false
+    particleWave: { value: false }
   })
 
-  const particles = (() => {
+  // Memoize particle positions to avoid recreating on every render
+  const particles = useMemo(() => {
     const positions = new Float32Array(particleCount * 3)
+    const initialPositions = new Float32Array(particleCount * 3)
     for (let i = 0; i < particleCount; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * particleSpread
-      positions[i * 3 + 1] = Math.random() * particleSpread
-      positions[i * 3 + 2] = (Math.random() - 0.5) * particleSpread
+      const x = (Math.random() - 0.5) * particleSpread
+      const y = Math.random() * particleSpread
+      const z = (Math.random() - 0.5) * particleSpread
+      positions[i * 3] = x
+      positions[i * 3 + 1] = y
+      positions[i * 3 + 2] = z
+      initialPositions[i * 3] = x
+      initialPositions[i * 3 + 1] = y
+      initialPositions[i * 3 + 2] = z
     }
+    positionsRef.current = positions
+    initialPositionsRef.current = initialPositions
     return positions
-  })()
+  }, [particleCount, particleSpread])
 
+  // Optimized animation using direct property manipulation
   useFrame((state) => {
-    if (!pointsRef.current || !particlesVisible) return
+    if (!groupRef.current || !particlesVisible) return
     
     const time = state.clock.getElapsedTime()
-    pointsRef.current.rotation.y = time * particleSpeed * 0.1
     
-    if (particleWave) {
+    // Direct rotation manipulation
+    groupRef.current.rotation.y = time * particleSpeed * 0.1
+    
+    // Wave effect with optimized buffer update
+    if (particleWave && pointsRef.current && positionsRef.current && initialPositionsRef.current) {
       const positions = pointsRef.current.geometry.attributes.position.array as Float32Array
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3
-        positions[i3 + 1] = Math.sin(time + i * 0.01) * 2 + Math.random() * particleSpread
+        // Use initial positions as base for wave calculation
+        positions[i3 + 1] = initialPositionsRef.current[i3 + 1] + Math.sin(time * 2 + i * 0.01) * 2
       }
       pointsRef.current.geometry.attributes.position.needsUpdate = true
     }
@@ -199,23 +219,23 @@ function ParticleSystem() {
   if (!particlesVisible) return null
 
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={particles.length / 3}
-          array={particles}
-          itemSize={3}
+    <group ref={groupRef}>
+      <points ref={pointsRef}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[particles, 3]}
+          />
+        </bufferGeometry>
+        <pointsMaterial 
+          size={particleSize}
+          color={particleColor}
+          transparent
+          opacity={0.6}
+          sizeAttenuation
         />
-      </bufferGeometry>
-      <pointsMaterial 
-        size={particleSize}
-        color={particleColor}
-        transparent
-        opacity={0.6}
-        sizeAttenuation
-      />
-    </points>
+      </points>
+    </group>
   )
 }
 
@@ -230,11 +250,11 @@ function SecondaryObjects() {
     coneColor
   } = useControls('Extras', {
     objects: {
-      showSphere: true,
+      showSphere: { value: true },
       sphereColor: { value: '#4080ff' },
-      showTorus: true,
+      showTorus: { value: true },
       torusColor: { value: '#ff4080' },
-      showCone: true,
+      showCone: { value: true },
       coneColor: { value: '#80ff40' }
     }
   })
@@ -279,8 +299,8 @@ function Scene() {
       value: 'sunset',
       options: ['sunset', 'dawn', 'night', 'warehouse', 'forest', 'apartment', 'studio']
     },
-    showGrid: true,
-    showStats: true
+    showGrid: { value: true },
+    showStats: { value: true }
   })
 
   return (

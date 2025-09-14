@@ -1,0 +1,20 @@
+# GitHub Pages configuration
+title: XEVA Documentation
+description: Leva-style API for 3D, XR-ready controls in React Three Fiber apps
+baseurl: "/xeva"
+url: "https://michaltakac.github.io"
+
+# Build settings
+markdown: kramdown
+theme: null
+
+# Include the README from parent directory
+include:
+  - README.md
+
+# Exclude files
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor

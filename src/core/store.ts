@@ -41,8 +41,8 @@ export function createXRControlsStore() {
     folders: new Map(),
     subscriptions: new Map(),
 
-    registerSchema: (id, schema, options = {}) => {
-      const state = get()
+    registerSchema: (id, schema, _options = {}) => {
+      // const state = get()
       const parsedControls = parseSchema(id, schema)
       
       set((state) => {

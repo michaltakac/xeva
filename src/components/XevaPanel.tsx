@@ -3,7 +3,6 @@ import { Root, Container, Text as UIText } from '@react-three/uikit'
 import { Card, Defaults, Slider, Button, Toggle } from '@react-three/uikit-default'
 import { useXevaStore } from '../core/useControls'
 import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
 
 interface XevaPanelProps {
   position?: [number, number, number]
@@ -35,7 +34,7 @@ export function XevaPanel({
   const controls = useXevaStore(state => state.getAllControls())
   const values = useXevaStore(state => state.values)
   const setValue = useXevaStore(state => state.setValue)
-  const folders = useXevaStore(state => state.folders)
+  // const folders = useXevaStore(state => state.folders)
   
   const [activeTab, setActiveTab] = useState<string | null>(null)
   const rootRef = React.useRef<any>(null)

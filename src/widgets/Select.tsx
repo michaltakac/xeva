@@ -1,6 +1,6 @@
 // UIKit docs: https://pmndrs.github.io/uikit/docs/
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Container, Text } from '@react-three/uikit'
 import type { ParsedControl } from '../core/types'
 
@@ -31,7 +31,7 @@ export function Select({ control, value, onChange }: SelectProps) {
         {label || control.key}
       </Text>
       
-      <Container position="relative">
+      <Container>
         <Container
           flexDirection="row"
           justifyContent="space-between"
@@ -39,7 +39,6 @@ export function Select({ control, value, onChange }: SelectProps) {
           padding={8}
           backgroundColor="#1a1a1a"
           borderRadius={4}
-          border="1px solid #333"
           onClick={() => setIsOpen(!isOpen)}
           cursor="pointer"
           hover={{
@@ -56,17 +55,11 @@ export function Select({ control, value, onChange }: SelectProps) {
         
         {isOpen && (
           <Container
-            position="absolute"
-            top="100%"
-            left={0}
-            right={0}
             backgroundColor="#1a1a1a"
-            border="1px solid #333"
             borderRadius={4}
             marginTop={2}
-            zIndex={1000}
             maxHeight={200}
-            overflow="auto"
+            overflow="scroll"
           >
             {optionEntries.map(([key, val]) => (
               <Container

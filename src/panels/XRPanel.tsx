@@ -18,7 +18,7 @@ export function XRPanel({
   width = 2,
   height = 2.5,
   pointerEventsOrder = 1,
-  pixelDensity = 256,
+  // pixelDensity = 256,
   children
 }: XRPanelProps) {
   const store = getGlobalStore()
@@ -146,7 +146,7 @@ export function XRPanel({
               const folder = controls.find(c => c.path.join('.') === folderPath && c.type === 'folder')
               if (!folder) return null
               
-              const isCollapsed = folder.config.collapsed ?? false
+              const isCollapsed = (folder.config as any).collapsed ?? false
               const folderName = folder.path[folder.path.length - 1]
               
               return (
@@ -165,7 +165,7 @@ export function XRPanel({
                     cursor="pointer"
                     onClick={() => {
                       // Toggle collapsed state
-                      folder.config.collapsed = !folder.config.collapsed
+                      (folder.config as any).collapsed = !(folder.config as any).collapsed
                       setControls([...store.getState().getAllControls()])
                     }}
                     hover={{

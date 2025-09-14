@@ -1,6 +1,5 @@
 // UIKit button with R3F events: https://r3f.docs.pmnd.rs/api/events
 
-import React from 'react'
 import { Container, Text } from '@react-three/uikit'
 import type { ParsedControl } from '../core/types'
 

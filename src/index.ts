@@ -5,8 +5,15 @@
 export { useControls, useXevaStore } from './core/useControls'
 export type { ControlValue, ControlConfig, FolderConfig, ControlsSchema } from './core/useControls'
 
-// Main panel component
+// Main panel components
 export { XevaPanel } from './components/XevaPanel'
+export { XevaPanelXR } from './components/XevaPanelXR'
+
+// XR hooks
+export { useXRGrab } from './xr/useXRGrab'
+export { useHandTracking } from './xr/useHandTracking'
+export { useSpatialAnchor } from './xr/useSpatialAnchor'
+export { useDualHandInteraction } from './xr/useDualHandInteraction'
 
 // Legacy exports (for backwards compatibility)
 export { useXRControls, useXRStore } from './core/hooks'

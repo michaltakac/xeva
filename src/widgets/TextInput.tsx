@@ -1,6 +1,6 @@
 // UIKit Input: https://pmndrs.github.io/uikit/docs/
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Container, Text, Input } from '@react-three/uikit'
 import type { ParsedControl } from '../core/types'
 
@@ -14,21 +14,6 @@ export function TextInput({ control, value, onChange }: TextInputProps) {
   const { label } = control.config
   const [inputValue, setInputValue] = useState(value)
   
-  const handleChange = (e: any) => {
-    const newValue = e.target.value
-    setInputValue(newValue)
-  }
-  
-  const handleBlur = () => {
-    onChange(inputValue)
-  }
-  
-  const handleKeyDown = (e: any) => {
-    if (e.key === 'Enter') {
-      onChange(inputValue)
-      e.target.blur()
-    }
-  }
   
   return (
     <Container
@@ -43,19 +28,16 @@ export function TextInput({ control, value, onChange }: TextInputProps) {
       
       <Input
         value={inputValue}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
+        onValueChange={(v: string) => {
+          setInputValue(v)
+          onChange(v)
+        }}
         backgroundColor="#1a1a1a"
         color="white"
         padding={8}
         borderRadius={4}
-        border="1px solid #333"
         fontSize={12}
         width="100%"
-        focus={{
-          border: '1px solid #0ea5e9'
-        }}
       />
     </Container>
   )

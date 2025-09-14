@@ -1,6 +1,5 @@
 // UIKit & Three.js Vector3: https://threejs.org/docs/#api/en/math/Vector3
 
-import React from 'react'
 import { Container, Text, Input } from '@react-three/uikit'
 import { Vector3 } from 'three'
 import type { ParsedControl } from '../core/types'
@@ -37,19 +36,17 @@ export function Vector3Input({ control, value, onChange }: Vector3InputProps) {
       
       <Container flexDirection="row" gap={4}>
         {(['x', 'y', 'z'] as const).map(axis => (
-          <Container key={axis} flex={1} flexDirection="column" gap={2}>
+          <Container key={axis} flexGrow={1} flexDirection="column" gap={2}>
             <Text fontSize={10} color="#999" textAlign="center">
               {axis.toUpperCase()}
             </Text>
             <Input
-              type="number"
               value={vec[axis].toFixed(2)}
-              onChange={(e: any) => handleChange(axis, e.target.value)}
+              onValueChange={(v: string) => handleChange(axis, v)}
               backgroundColor="#1a1a1a"
               color="white"
               padding={4}
               borderRadius={4}
-              border="1px solid #333"
               fontSize={11}
               textAlign="center"
             />

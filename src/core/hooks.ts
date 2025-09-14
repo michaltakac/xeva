@@ -1,8 +1,8 @@
 // Based on Leva's useControls: https://github.com/pmndrs/leva
 // Using Zustand with React: https://zustand.docs.pmnd.rs/guides/vanilla-store#using-vanilla-store-in-react
 
-import { useEffect, useRef, useMemo, useCallback } from 'react'
-import { useStore } from 'zustand'
+import { useEffect, useRef, useMemo } from 'react'
+// import { useStore } from 'zustand'
 import { getGlobalStore, type XRControlsStore } from './store'
 import type { ControlsSchema } from './types'
 
@@ -57,7 +57,7 @@ export function useXRControls<T extends ControlsSchema>(
   
   // Create proxy for reactive values
   const values = useMemo(() => {
-    const proxy = {} as ExtractValues<T>
+    // const proxy = {} as ExtractValues<T>
     const state = store.getState()
     
     function buildProxy(obj: ControlsSchema, path: string[] = []): any {

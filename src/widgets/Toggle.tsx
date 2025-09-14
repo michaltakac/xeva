@@ -1,7 +1,6 @@
 // UIKit components: https://pmndrs.github.io/uikit/docs/
 // R3F events: https://r3f.docs.pmnd.rs/api/events
 
-import React from 'react'
 import { Container, Text } from '@react-three/uikit'
 import type { ParsedControl } from '../core/types'
 
@@ -48,9 +47,7 @@ export function Toggle({ control, value, onChange }: ToggleProps) {
           height={20}
           backgroundColor="white"
           borderRadius={10}
-          transform={`translateX(${value ? 20 : 0}px)`}
-          transition="transform 0.2s ease"
-          boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+          marginLeft={value ? 20 : 0}
         />
       </Container>
     </Container>

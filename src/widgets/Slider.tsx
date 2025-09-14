@@ -1,9 +1,8 @@
 // Based on: https://pmndrs.github.io/uikit/docs/
 // R3F pointer events: https://r3f.docs.pmnd.rs/api/events
 
-import React, { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Container, Text } from '@react-three/uikit'
-import { useThree } from '@react-three/fiber'
 import type { ParsedControl } from '../core/types'
 
 interface SliderProps {
@@ -16,7 +15,7 @@ export function Slider({ control, value, onChange }: SliderProps) {
   const { min = 0, max = 100, step = 1, label } = control.config
   const [isDragging, setIsDragging] = useState(false)
   const containerRef = useRef<any>(null)
-  const { size } = useThree()
+  // const { size } = useThree()
   
   const percentage = ((value - min) / (max - min)) * 100
   
@@ -78,18 +77,6 @@ export function Slider({ control, value, onChange }: SliderProps) {
           height="100%"
           backgroundColor="#0ea5e9"
           borderRadius={10}
-          pointerEvents="none"
-        />
-        <Container
-          position="absolute"
-          left={`${percentage}%`}
-          top="50%"
-          transform="translate(-50%, -50%)"
-          width={16}
-          height={16}
-          backgroundColor="white"
-          borderRadius={8}
-          boxShadow="0 2px 4px rgba(0,0,0,0.2)"
           pointerEvents="none"
         />
       </Container>
