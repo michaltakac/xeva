@@ -1,77 +1,109 @@
-# XEVA Basic R3F Example
+# React Three Fiber UIKit Demo
 
-This example demonstrates XEVA controls in a basic React Three Fiber scene.
+A comprehensive 3D control panel demo built with React Three Fiber and @react-three/uikit-default, demonstrating real-time control of 3D objects, materials, animations, and scene properties.
+
+## Features
+
+### 🎨 Hero Object Controls
+- **Geometry Switching**: Dynamically change between box, sphere, torus, cone, cylinder, and dodecahedron
+- **Material Properties**: Control color, emissive, roughness, metalness, opacity, transparency
+- **Advanced Materials**: Physical material properties like clearcoat, reflectivity, environment mapping
+- **Transform Controls**: Position, rotation, and scale adjustments
+- **Animations**: Auto-rotate, float effects, pulse animations with customizable parameters
+- **Action Buttons**: Reset, randomize, and export settings functionality
+
+### ✨ Particle System
+- Dynamic particle count (100-2000 particles)
+- Adjustable particle size and color
+- Spread control for particle distribution
+- Wave effects with amplitude control
+- Rotation animations
+
+### 🌍 Environment Controls
+- **Lighting System**: Directional, ambient, point, and spot lights with full control
+- **Environment Presets**: 10+ HDR environment maps (sunset, dawn, night, warehouse, etc.)
+- **Atmosphere**: Fog effects with color and distance controls
+- **Ground**: Reflective material with real-time reflections
+- **Helpers**: Grid, axes, and stats display toggles
+
+### 🎭 Secondary Objects
+- Multiple geometric shapes with individual controls
+- Arrangement patterns: circle, line, grid
+- Float animations with different speeds
+- Individual material properties
+
+### 📷 Camera Controls
+- Field of view adjustment
+- Near/far plane clipping
+- Auto-rotation with speed control
+- Smooth damping for fluid movement
+- Distance constraints
+
+### 🎛️ Tabbed Interface
+The control panel is organized into 5 intuitive tabs:
+1. **Geometry** - Shape, size, segments, and position controls
+2. **Material** - Color, metalness, roughness, and other material properties
+3. **Animation** - Rotation, float, and pulse effect controls
+4. **Particles** - Particle system configuration
+5. **Extras** - Secondary objects and scene settings
 
 ## Running the Example
 
-### Option 1: Using Bun Server (Recommended)
 ```bash
-bun install
-bun dev
-# Open http://localhost:3003
+# Install dependencies
+npm install
+
+# Run with Vite (recommended)
+npm run dev
+
+# Or run with Bun
+npm run dev:bun
+
+# Build for production
+npm run build
 ```
 
-### Option 2: Install older Vite
-If you prefer Vite, install an older version compatible with Node 20.10:
-```bash
-npm install vite@5.0.0 @vitejs/plugin-react@4.2.0
-npm run dev:vite
-```
+## Technologies Used
 
-### Option 3: Use a static server
-```bash
-# Build the example
-bun build src/main.tsx --outdir dist
+- **React Three Fiber**: React renderer for Three.js
+- **@react-three/uikit**: UI system for 3D environments
+- **@react-three/uikit-default**: Default UI components
+- **@react-three/drei**: Useful helpers for R3F
+- **Three.js**: 3D graphics library
+- **TypeScript**: Type safety
+- **Vite**: Build tool and dev server
 
-# Serve with any static server
-npx serve dist
-# or
-python -m http.server 8000 -d dist
-```
+## Controls
 
-## Features Demonstrated
+- **Mouse**: Click and drag to rotate the camera
+- **Scroll**: Zoom in/out
+- **Panel Buttons**: Switch panel position between left, right, and floating
+- **Control Panel**: Interact with all the sliders, color pickers, and buttons to modify the scene
+- **Info Toggle**: Show/hide the information panel
 
-- **Material Controls**: Color, roughness, metalness, wireframe
-- **Animation Controls**: Speed, rotation axes toggles
-- **Transform Controls**: Position (Vector3), scale
-- **Lighting Controls**: Intensity, ambient intensity, light position
-- **Folders**: Organized controls in collapsible groups
-- **Button**: Reset action
+## Architecture
 
-## How It Works
+The example demonstrates:
+- Component composition with React Three Fiber
+- State management with React hooks
+- Real-time 3D manipulation using @react-three/uikit
+- Performance optimization with `useMemo` and `useFrame`
+- Material and geometry switching
+- Particle systems and animations
+- Environment and lighting control
+- Camera manipulation
 
-The example uses `useXRControls` hook to create reactive controls:
+## Files
 
-```tsx
-const { color, roughness, speed } = useXRControls('Material', {
-  color: '#ff6030',
-  roughness: { value: 0.5, min: 0, max: 1, step: 0.01 },
-  speed: { value: 1, min: 0, max: 5 }
-})
-```
+- `EnhancedUIKitDemo.tsx` - Full-featured demo with tabbed interface
+- `UIKitDemo.tsx` - Simpler version with basic controls
+- `main.tsx` - Entry point (switch between demos here)
 
-The `XRPanel` component renders the controls in 3D space:
+## Key Components
 
-```tsx
-<XRPanel 
-  position={[-3, 2, -2]}
-  width={400}
-  height={500}
-  billboard={false}
-/>
-```
+1. **Hero3DObject**: Main interactive 3D object with comprehensive material and animation controls
+2. **ParticleSystem**: Dynamic particle effects with wave animations
+3. **SecondaryObjects**: Additional floating shapes with individual colors
+4. **ControlPanel**: UIKit-based 3D control panel with tabbed interface
 
-## Live Development
-
-The Bun server (server.tsx) provides:
-- TypeScript/TSX transpilation on the fly
-- No build step required
-- Hot reload support
-- Instant updates
-
-## Notes
-
-- The panel is positioned in world space at `[-3, 2, -2]`
-- Controls are fully interactive with mouse/touch
-- All changes are reflected in real-time
-- The example works in both desktop and mobile browsers
+This example serves as a complete reference implementation for building 3D UI controls with React Three Fiber and @react-three/uikit.

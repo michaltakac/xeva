@@ -1,0 +1,54 @@
+# Source files
+src/
+examples/
+tests/
+docs/
+
+# Config files
+.github/
+.changeset/
+*.config.ts
+*.config.js
+tsconfig.json
+tsconfig.*.json
+.eslintrc*
+.prettierrc*
+.gitignore
+.npmignore
+
+# Development files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+*.log
+*.local
+.env*
+.DS_Store
+
+# Build artifacts not needed
+node_modules/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Certificates and local files
+*.pem
+*.key
+*.crt
+.cert/
+
+# Scripts
+*.sh
+
+# Keep only what's specified in package.json "files" field
+# - dist/
+# - README.md
+# - LICENSE
+# - CHANGELOG.md

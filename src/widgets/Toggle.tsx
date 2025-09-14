@@ -1,23 +1,22 @@
 // UIKit components: https://pmndrs.github.io/uikit/docs/
 // R3F events: https://r3f.docs.pmnd.rs/api/events
 
-import React from 'react'
-import { Container, Text } from '@react-three/uikit'
-import type { ParsedControl } from '../core/types'
+import { Container, Text } from "@react-three/uikit";
+import type { ParsedControl } from "../core/types";
 
 interface ToggleProps {
-  control: ParsedControl
-  value: boolean
-  onChange: (value: boolean) => void
+  control: ParsedControl;
+  value: boolean;
+  onChange: (value: boolean) => void;
 }
 
 export function Toggle({ control, value, onChange }: ToggleProps) {
-  const { label } = control.config
-  
+  const { label } = control.config;
+
   const handleClick = () => {
-    onChange(!value)
-  }
-  
+    onChange(!value);
+  };
+
   return (
     <Container
       flexDirection="row"
@@ -30,17 +29,17 @@ export function Toggle({ control, value, onChange }: ToggleProps) {
       <Text fontSize={12} color="white">
         {label || control.key}
       </Text>
-      
+
       <Container
         width={44}
         height={24}
-        backgroundColor={value ? '#0ea5e9' : '#333333'}
+        backgroundColor={value ? "#0ea5e9" : "#333333"}
         borderRadius={12}
         padding={2}
         onClick={handleClick}
         cursor="pointer"
         hover={{
-          backgroundColor: value ? '#0284c7' : '#404040'
+          backgroundColor: value ? "#0284c7" : "#404040",
         }}
       >
         <Container
@@ -48,11 +47,9 @@ export function Toggle({ control, value, onChange }: ToggleProps) {
           height={20}
           backgroundColor="white"
           borderRadius={10}
-          transform={`translateX(${value ? 20 : 0}px)`}
-          transition="transform 0.2s ease"
-          boxShadow="0 2px 4px rgba(0,0,0,0.2)"
+          marginLeft={value ? 20 : 0}
         />
       </Container>
     </Container>
-  )
+  );
 }

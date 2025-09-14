@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XREVA - XR-Ready Controls for React Three Fiber</title>
+    <meta name="description" content="Leva-style API for 3D, XR-ready controls in React Three Fiber apps">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown-light.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #24292f;
+            background: #ffffff;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .nav-links {
+            margin-top: 1.5rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-right: 1.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            gap: 2rem;
+        }
+        
+        .sidebar {
+            width: 250px;
+            flex-shrink: 0;
+        }
+        
+        .sidebar-sticky {
+            position: sticky;
+            top: 2rem;
+        }
+        
+        .sidebar h3 {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #57606a;
+            margin-bottom: 1rem;
+        }
+        
+        .sidebar ul {
+            list-style: none;
+        }
+        
+        .sidebar li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar a {
+            color: #0969da;
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .sidebar a:hover {
+            background: #f6f8fa;
+            color: #0860ca;
+        }
+        
+        .sidebar a.active {
+            background: #ddf4ff;
+            color: #0550ae;
+            font-weight: 600;
+        }
+        
+        .content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .markdown-body {
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .footer {
+            background: #f6f8fa;
+            border-top: 1px solid #d0d7de;
+            padding: 2rem;
+            text-align: center;
+            margin-top: 4rem;
+        }
+        
+        .footer a {
+            color: #0969da;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+            }
+            
+            .sidebar-sticky {
+                position: static;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-links a {
+                display: inline-block;
+                margin-bottom: 0.5rem;
+            }
+        }
+        
+        .code-block {
+            position: relative;
+        }
+        
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            background: #f6f8fa;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .copy-button:hover {
+            background: #eaeef2;
+        }
+        
+        .copy-button.copied {
+            background: #2ea043;
+            color: white;
+            border-color: #2ea043;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1>🎮 XREVA</h1>
+            <p>Leva-style API for 3D, XR-ready controls in React Three Fiber apps</p>
+            <div class="nav-links">
+                <a href="https://github.com/michaltakac/xreva" target="_blank">GitHub</a>
+                <a href="https://www.npmjs.com/package/xreva" target="_blank">NPM</a>
+                <a href="#getting-started">Getting Started</a>
+                <a href="#api">API</a>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <aside class="sidebar">
+            <div class="sidebar-sticky">
+                <h3>Documentation</h3>
+                <ul id="sidebar-nav">
+                    <li><a href="#home" class="nav-link active">Home</a></li>
+                    <li><a href="#quest3-quickstart" class="nav-link">Quest 3 Quickstart</a></li>
+                    <li><a href="#xr-testing-guide" class="nav-link">XR Testing Guide</a></li>
+                    <li><a href="#xreva-xr-design" class="nav-link">XR Design</a></li>
+                    <li><a href="#dual-hand-test" class="nav-link">Dual Hand Test</a></li>
+                    <li><a href="#implementation-status" class="nav-link">Implementation Status</a></li>
+                </ul>
+            </div>
+        </aside>
+        
+        <main class="content">
+            <div id="content-area" class="markdown-body">
+                <!-- Content will be loaded here -->
+            </div>
+        </main>
+    </div>
+    
+    <footer class="footer">
+        <p>
+            <a href="https://github.com/michaltakac/xreva">XREVA</a> is released under the MIT License.
+            <br>
+            Created with ❤️ for the React Three Fiber community.
+        </p>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script>
+        // Documentation pages mapping
+        const pages = {
+            'home': 'README.md',
+            'quest3-quickstart': 'quest3-quickstart.md',
+            'xr-testing-guide': 'xr-testing-guide.md',
+            'xreva-xr-design': 'xreva-xr-design.md',
+            'dual-hand-test': 'dual-hand-test.md',
+            'implementation-status': 'implementation-status.md'
+        };
+        
+        // Load and render markdown content
+        async function loadContent(page) {
+            const contentArea = document.getElementById('content-area');
+            
+            try {
+                let file = pages[page] || pages['home'];
+                
+                // For README, fetch from parent directory
+                const url = file === 'README.md' ? '../README.md' : file;
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to load content');
+                
+                const markdown = await response.text();
+                
+                // Configure marked
+                marked.setOptions({
+                    highlight: function(code, lang) {
+                        if (Prism.languages[lang]) {
+                            return Prism.highlight(code, Prism.languages[lang], lang);
+                        }
+                        return code;
+                    },
+                    breaks: true,
+                    gfm: true
+                });
+                
+                // Render markdown
+                let html = marked.parse(markdown);
+                
+                // Add copy buttons to code blocks
+                html = html.replace(/<pre>/g, '<div class="code-block"><button class="copy-button" onclick="copyCode(this)">Copy</button><pre>');
+                html = html.replace(/<\/pre>/g, '</pre></div>');
+                
+                contentArea.innerHTML = html;
+                
+                // Update active nav link
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + page) {
+                        link.classList.add('active');
+                    }
+                });
+                
+                // Scroll to top
+                window.scrollTo(0, 0);
+            } catch (error) {
+                contentArea.innerHTML = `
+                    <h2>Error loading content</h2>
+                    <p>Sorry, we couldn't load the requested documentation page.</p>
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Copy code function
+        function copyCode(button) {
+            const codeBlock = button.nextElementSibling;
+            const code = codeBlock.textContent;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                    button.classList.remove('copied');
+                }, 2000);
+            });
+        }
+        
+        // Handle navigation
+        function handleNavigation() {
+            const hash = window.location.hash.slice(1) || 'home';
+            loadContent(hash);
+        }
+        
+        // Set up event listeners
+        window.addEventListener('hashchange', handleNavigation);
+        window.addEventListener('DOMContentLoaded', handleNavigation);
+        
+        // Handle nav link clicks
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = link.getAttribute('href').slice(1);
+                window.location.hash = page;
+            });
+        });
+    </script>
+</body>
+</html>

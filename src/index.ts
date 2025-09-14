@@ -1,36 +1,43 @@
-// XEVA - Leva-style API for 3D, XR-ready controls in React Three Fiber
-// Docs: https://github.com/michaltakac/xeva
+// XREVA - Leva-style API for 3D, XR-ready controls in React Three Fiber
+// Docs: https://github.com/michaltakac/xreva
 
-// Core hooks
-export { useXRControls, useXRStore } from './core/hooks'
+// Main hook - Leva-like API
+export { useControls, useXrevaStore } from "./core/useControls";
+export type {
+  ControlValue,
+  ControlConfig,
+  FolderConfig,
+  ControlsSchema,
+} from "./core/useControls";
 
-// Panels
-export { XRPanel } from './panels/XRPanel'
-export { XRHUDPanel } from './panels/XRHUDPanel'
+// Main panel components
+export { XrevaPanel } from "./components/XrevaPanel";
+export { XrevaPanelXR } from "./components/XrevaPanelXR";
 
-// Provider
-export { XRControlsProvider } from './core/provider'
+// XR hooks
+export { useXRGrab } from "./xr/useXRGrab";
+export { useHandTracking } from "./xr/useHandTracking";
+export { useSpatialAnchor } from "./xr/useSpatialAnchor";
+export { useDualHandInteraction } from "./xr/useDualHandInteraction";
 
-// Plugin API
-export { registerControl } from './core/plugins'
-
-// Store (advanced usage)
-export { createXRControlsStore, getGlobalStore } from './core/store'
-export type { XRControlsStore } from './core/store'
+// Legacy exports (for backwards compatibility)
+export { useXRControls, useXRStore } from "./core/hooks";
+export { XRPanel } from "./panels/XRPanel";
+export { XRHUDPanel } from "./panels/XRHUDPanel";
+export { XRControlsProvider } from "./core/provider";
+export { registerControl } from "./core/plugins";
+export { createXRControlsStore, getGlobalStore } from "./core/store";
+export type { XRControlsStore } from "./core/store";
 
 // Types
 export type {
-  ControlsSchema,
-  ControlValue,
-  ControlConfig,
   ControlType,
   ControlImpl,
   ParsedControl,
-  FolderConfig,
   XRPanelProps,
   XRHUDPanelProps,
-  XRTheme
-} from './core/types'
+  XRTheme,
+} from "./core/types";
 
 // Auto-register default controls on import
-import './core/register'
+import "./core/register";

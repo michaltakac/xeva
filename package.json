@@ -1,6 +1,6 @@
 {
-  "name": "xeva",
-  "version": "0.2.0",
+  "name": "xreva",
+  "version": "0.2.1",
   "description": "Leva-style API for 3D, XR-ready controls in React Three Fiber apps",
   "author": "Michal Takac",
   "license": "MIT",
@@ -16,13 +16,13 @@
     "uikit",
     "leva"
   ],
-  "homepage": "https://github.com/michaltakac/xeva#readme",
+  "homepage": "https://github.com/michaltakac/xreva#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/michaltakac/xeva.git"
+    "url": "git+https://github.com/michaltakac/xreva.git"
   },
   "bugs": {
-    "url": "https://github.com/michaltakac/xeva/issues"
+    "url": "https://github.com/michaltakac/xreva/issues"
   },
   "type": "module",
   "main": "./dist/index.cjs",
@@ -44,8 +44,10 @@
   ],
   "scripts": {
     "dev": "vite serve examples/basic-r3f",
+    "dev:xr": "vite serve examples/xr",
     "build": "bun run build:bundle && bun run build:types",
-    "build:bundle": "bun build ./src/index.ts --outdir ./dist --format esm --target browser --external react --external react-dom --external three --external @react-three/fiber --external @react-three/xr --external @react-three/uikit --external @react-three/uikit-default --external zustand && bun build ./src/index.ts --outdir ./dist --format cjs --target browser --external react --external react-dom --external three --external @react-three/fiber --external @react-three/xr --external @react-three/uikit --external @react-three/uikit-default --external zustand",
+    "build:examples": "vite build examples/basic-r3f && vite build examples/xr",
+    "build:bundle": "bun build ./src/index.ts --outfile ./dist/index.mjs --format esm --target browser --external react --external react-dom --external three --external @react-three/fiber --external @react-three/xr --external @react-three/uikit --external @react-three/uikit-default --external zustand && bun build ./src/index.ts --outfile ./dist/index.cjs --format cjs --target browser --external react --external react-dom --external three --external @react-three/fiber --external @react-three/xr --external @react-three/uikit --external @react-three/uikit-default --external zustand",
     "build:types": "tsc --emitDeclarationOnly",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
@@ -53,33 +55,44 @@
     "test:coverage": "bun test --coverage",
     "lint": "eslint src --ext .ts,.tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "prepublish:check": "node scripts/pre-publish-check.js",
     "release": "changeset publish",
     "changeset": "changeset"
   },
   "peerDependencies": {
-    "@react-three/fiber": "^9.3.0",
-    "@react-three/uikit": "^0.8.21",
-    "@react-three/uikit-default": "^0.8.21",
-    "@react-three/xr": "^6.6.26",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "three": "^0.180.0",
-    "zustand": "^5.0.8"
+    "@react-three/fiber": ">=8.0.0",
+    "@react-three/uikit": ">=0.6.0",
+    "@react-three/uikit-default": ">=0.6.0",
+    "@react-three/xr": ">=6.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "three": ">=0.170.0",
+    "zustand": ">=5.0.0"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.7",
     "@happy-dom/global-registrator": "^18.0.1",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^9.3.0",
+    "@react-three/uikit": "^0.8.21",
+    "@react-three/uikit-default": "^0.8.21",
+    "@react-three/xr": "^6.6.26",
+    "@rollup/rollup-darwin-arm64": "^4.50.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.0",
     "@types/bun": "^1.2.21",
-    "@types/react": "^19.1.12",
+    "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@types/three": "^0.180.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9.35.0",
     "happy-dom": "^18.0.1",
     "prettier": "^3.6.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "three": "^0.180.0",
     "typescript": "^5.9.2",
-    "vite": "^7.1.5"
+    "vite": "^5.4.11",
+    "zustand": "^5.0.8"
   }
 }

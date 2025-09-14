@@ -1,6 +1,6 @@
-# Contributing to XEVA
+# Contributing to XREVA
 
-We love your input! We want to make contributing to XEVA as easy and transparent as possible.
+We love your input! We want to make contributing to XREVA as easy and transparent as possible.
 
 ## Development Process
 
@@ -19,9 +19,9 @@ We use GitHub to host code, to track issues and feature requests, as well as acc
 
 When you submit code changes, your submissions are understood to be under the same [MIT License](LICENSE) that covers the project.
 
-## Report bugs using Github's [issues](https://github.com/yourusername/xeva/issues)
+## Report bugs using Github's [issues](https://github.com/michaltakac/xreva/issues)
 
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/yourusername/xeva/issues/new).
+We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/michaltakac/xreva/issues/new).
 
 ## Write bug reports with detail, background, and sample code
 
@@ -39,8 +39,8 @@ We use GitHub issues to track public bugs. Report a bug by [opening a new issue]
 
 ```bash
 # Clone your fork
-git clone https://github.com/yourusername/xeva.git
-cd xeva
+git clone https://github.com/michaltakac/xreva.git
+cd xreva
 
 # Install dependencies
 bun install

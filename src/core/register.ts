@@ -1,120 +1,123 @@
 // Register default control implementations
 
-import { registerControl } from './plugins'
-import { 
-  Slider, 
-  Toggle, 
-  ColorPicker, 
-  Select, 
-  TextInput, 
+import { registerControl } from "./plugins";
+import {
+  Slider,
+  Toggle,
+  ColorPicker,
+  Select,
+  TextInput,
   Vector3Input,
-  Button 
-} from '../widgets'
-import { Color, Vector3 } from 'three'
+  Button,
+} from "../widgets";
+import { Color, Vector3 } from "three";
 
 export function registerDefaultControls() {
   // Number control (slider)
-  registerControl('number', {
-    type: 'number',
+  registerControl("number", {
+    type: "number",
     parse: (value) => {
-      if (typeof value === 'number') {
-        return { value }
+      if (typeof value === "number") {
+        return { value };
       }
-      if (typeof value === 'object' && 'value' in value) {
-        return value as any
+      if (typeof value === "object" && "value" in value) {
+        return value as any;
       }
-      return { value: 0 }
+      return { value: 0 };
     },
-    component: Slider
-  })
-  
+    component: Slider,
+  });
+
   // Boolean control (toggle)
-  registerControl('boolean', {
-    type: 'boolean',
+  registerControl("boolean", {
+    type: "boolean",
     parse: (value) => {
-      if (typeof value === 'boolean') {
-        return { value }
+      if (typeof value === "boolean") {
+        return { value };
       }
-      if (typeof value === 'object' && 'value' in value) {
-        return value as any
+      if (typeof value === "object" && "value" in value) {
+        return value as any;
       }
-      return { value: false }
+      return { value: false };
     },
-    component: Toggle
-  })
-  
+    component: Toggle,
+  });
+
   // String control (text input)
-  registerControl('string', {
-    type: 'string',
+  registerControl("string", {
+    type: "string",
     parse: (value) => {
-      if (typeof value === 'string') {
-        return { value }
+      if (typeof value === "string") {
+        return { value };
       }
-      if (typeof value === 'object' && 'value' in value) {
-        return value as any
+      if (typeof value === "object" && "value" in value) {
+        return value as any;
       }
-      return { value: '' }
+      return { value: "" };
     },
-    component: TextInput
-  })
-  
+    component: TextInput,
+  });
+
   // Color control
-  registerControl('color', {
-    type: 'color',
+  registerControl("color", {
+    type: "color",
     parse: (value) => {
-      if (typeof value === 'string' || value instanceof Color) {
-        return { value }
+      if (typeof value === "string" || value instanceof Color) {
+        return { value };
       }
-      if (typeof value === 'object' && 'value' in value) {
-        return value as any
+      if (typeof value === "object" && "value" in value) {
+        return value as any;
       }
-      return { value: '#ffffff' }
+      return { value: "#ffffff" };
     },
-    component: ColorPicker
-  })
-  
+    component: ColorPicker,
+  });
+
   // Select control
-  registerControl('select', {
-    type: 'select',
+  registerControl("select", {
+    type: "select",
     parse: (value) => {
-      if (typeof value === 'object' && 'value' in value && 'options' in value) {
-        return value as any
+      if (typeof value === "object" && "value" in value && "options" in value) {
+        return value as any;
       }
-      return { value: '', options: [] }
+      return { value: "", options: [] };
     },
-    component: Select
-  })
-  
+    component: Select,
+  });
+
   // Vector3 control
-  registerControl('vector3', {
-    type: 'vector3',
+  registerControl("vector3", {
+    type: "vector3",
     parse: (value) => {
-      if (value instanceof Vector3 || (typeof value === 'object' && 'x' in value)) {
-        return { value }
+      if (
+        value instanceof Vector3 ||
+        (typeof value === "object" && "x" in value)
+      ) {
+        return { value };
       }
-      if (typeof value === 'object' && 'value' in value) {
-        return value as any
+      if (typeof value === "object" && "value" in value) {
+        return value as any;
       }
-      return { value: new Vector3() }
+      return { value: new Vector3() };
     },
-    component: Vector3Input
-  })
-  
+    component: Vector3Input,
+  });
+
   // Button control
-  registerControl('button', {
-    type: 'button',
+  registerControl("button", {
+    type: "button",
     parse: (value) => {
-      if (typeof value === 'function') {
-        return { value }
+      if (typeof value === "function") {
+        return { value };
       }
-      if (typeof value === 'object' && 'value' in value) {
-        return value as any
+      if (typeof value === "object" && "value" in value) {
+        return value as any;
       }
-      return { value: () => {} }
+      return { value: () => {} };
     },
-    component: Button
-  })
+    component: Button,
+  });
 }
 
 // Auto-register on import
-registerDefaultControls()
+registerDefaultControls();
