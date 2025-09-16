@@ -270,6 +270,9 @@ bun run build
 
 # Type check
 bun run typecheck
+
+# Regenerate docs manifest
+npm run docs:manifest
 ```
 
 ## Architecture

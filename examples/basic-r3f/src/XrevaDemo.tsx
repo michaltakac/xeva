@@ -1,4 +1,4 @@
-import { Suspense, useRef, useMemo } from 'react'
+import React, { Suspense, useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { 
   OrbitControls, 
@@ -6,14 +6,17 @@ import {
   Environment, 
   Stats,
   Float,
-  MeshReflectorMaterial,
   Text,
   Sphere,
   Torus,
-  Cone
+  Cone,
+  PerformanceMonitor,
+  AdaptiveDpr,
+  AdaptiveEvents
 } from '@react-three/drei'
 import { useControls, XrevaPanel } from 'xreva'
 import * as THREE from 'three'
+import { FPSStats, FPSOverlay } from './FPSStats'
 
 // Main controllable 3D object using XREVA controls
 function Hero3DObject() {
@@ -22,29 +25,35 @@ function Hero3DObject() {
   
   // Using the new Leva-like API
   const {
-    geometryType,
-    size,
-    segments,
-    scale,
-    positionX,
-    positionY,
-    positionZ,
-    color,
-    emissive,
-    emissiveIntensity,
-    metalness,
-    roughness,
-    clearcoat,
-    wireframe,
-    transparent,
-    opacity,
-    autoRotate,
-    rotationSpeed,
-    floatEffect,
-    floatSpeed,
-    floatIntensity,
-    pulse,
-    pulseScale
+    geometry: {
+      geometryType,
+      size,
+      segments,
+      scale,
+      positionX,
+      positionY,
+      positionZ
+    },
+    material: {
+      color,
+      emissive,
+      emissiveIntensity,
+      metalness,
+      roughness,
+      clearcoat,
+      wireframe,
+      transparent,
+      opacity
+    },
+    animation: {
+      autoRotate,
+      rotationSpeed,
+      floatEffect,
+      floatSpeed,
+      floatIntensity,
+      pulse,
+      pulseScale
+    }
   } = useControls('Main Object', {
     geometry: {
       geometryType: {
@@ -242,12 +251,14 @@ function ParticleSystem() {
 // Secondary Objects with XEVA controls
 function SecondaryObjects() {
   const {
-    showSphere,
-    sphereColor,
-    showTorus,
-    torusColor,
-    showCone,
-    coneColor
+    objects: {
+      showSphere,
+      sphereColor,
+      showTorus,
+      torusColor,
+      showCone,
+      coneColor
+    }
   } = useControls('Extras', {
     objects: {
       showSphere: { value: true },
@@ -291,55 +302,76 @@ function SecondaryObjects() {
 // Scene component with environment controls
 function Scene() {
   const {
-    environment,
-    showGrid,
-    showStats
-  } = useControls('Scene', {
-    environment: {
-      value: 'sunset',
-      options: ['sunset', 'dawn', 'night', 'warehouse', 'forest', 'apartment', 'studio']
-    },
-    showGrid: { value: true },
-    showStats: { value: true }
+    scene: {
+      environment,
+      envIntensity,
+      backgroundColor,
+      fog,
+      showGrid,
+      showStats
+    }
+  } = useControls('Scene Settings', {
+    scene: {
+      environment: {
+        value: 'sunset',
+        options: ['sunset', 'dawn', 'night', 'warehouse', 'forest', 'apartment', 'studio', 'city', 'park', 'lobby'],
+        label: 'Environment'
+      },
+      envIntensity: { value: 1, min: 0, max: 3, step: 0.1, label: 'Environment Intensity' },
+      backgroundColor: { value: '#1a1a2e', label: 'Background Color' },
+      fog: { value: true, label: 'Enable Fog' },
+      showGrid: { value: true, label: 'Show Grid' },
+      showStats: { value: true, label: 'Show FPS Stats' }
+    }
   })
 
   return (
     <>
-      {/* Sky */}
-      <Sky 
-        distance={450000}
-        sunPosition={[0, 1, 0]}
-        inclination={0}
-        azimuth={0.25}
-      />
+      {/* Background color */}
+      <color attach="background" args={[backgroundColor]} />
+      
+      {/* Fog */}
+      {fog && <fog attach="fog" args={[backgroundColor, 10, 100]} />}
+      
+      {/* Sky - only show for outdoor environments */}
+      {['sunset', 'dawn', 'night', 'forest', 'park'].includes(environment) && (
+        <Sky 
+          distance={450000}
+          sunPosition={[0, 1, 0]}
+          inclination={0}
+          azimuth={0.25}
+        />
+      )}
       
       {/* Environment and Lighting */}
-      <Environment preset={environment as any} background />
+      <Environment 
+        preset={environment as any} 
+        background={!['sunset', 'dawn', 'night', 'forest', 'park'].includes(environment)}
+        environmentIntensity={envIntensity}
+      />
       <ambientLight intensity={0.4} />
       <directionalLight 
         position={[10, 10, 5]} 
         intensity={1.2} 
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[1024, 1024]} // Reduced from 2048 for better performance
+        shadow-camera-far={50}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
       />
       <pointLight position={[-10, 5, -10]} intensity={0.5} color="#ff6030" />
       <spotLight position={[0, 15, 0]} angle={0.3} penumbra={1} intensity={0.5} castShadow />
       
-      {/* Floor with reflections */}
+      {/* Floor - using standard material due to React 19 compatibility */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]} receiveShadow>
         <planeGeometry args={[50, 50]} />
-        <MeshReflectorMaterial
-          blur={[300, 100]}
-          resolution={2048}
-          mixBlur={1}
-          mixStrength={80}
-          roughness={1}
-          depthScale={1.2}
-          minDepthThreshold={0.4}
-          maxDepthThreshold={1.4}
+        <meshStandardMaterial 
           color="#101010"
-          metalness={0.5}
-          mirror={0}
+          metalness={0.8}
+          roughness={0.1}
+          envMapIntensity={1}
         />
       </mesh>
       
@@ -368,7 +400,7 @@ function Scene() {
         anchorX="center"
         anchorY="middle"
       >
-        XEVA DEMO
+        XREVA DEMO
         <meshStandardMaterial 
           color="#ff6030" 
           metalness={0.8} 
@@ -378,29 +410,58 @@ function Scene() {
         />
       </Text>
       
-      {/* XEVA Control Panel - uses the new component */}
+      {/* XReva Control Panel - uses the new component */}
       <XrevaPanel 
-        position={[4.5, 0, 0]}
-        title="XEVA Controls"
+        position={[5, 1, 0]}
+        rotation={[0, -0.3, 0]}
+        title="XReva Controls"
         tabs={true}
+        scale={0.8}
+        billboard={false}
       />
       
-      {/* Stats */}
-      {showStats && <Stats />}
+      {/* FPS Stats - using custom component for React 19 compatibility */}
+      {showStats && <FPSStats />}
     </>
   )
 }
 
 // Main App using refactored XEVA
 function XrevaDemo() {
+  // Simple state to control FPS display from outside canvas
+  const [showFPSOverlay, setShowFPSOverlay] = React.useState(false)
+  
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#000' }}>
+      {/* Alternative FPS overlay (outside canvas) */}
+      {showFPSOverlay && <FPSOverlay />}
+      
       <Canvas
         shadows
         camera={{ position: [8, 6, 8], fov: 60 }}
         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+        gl={{ 
+          antialias: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          powerPreference: "high-performance",
+          alpha: false,
+          stencil: false,
+          depth: true
+        }}
+        dpr={[1, 2]} // Limit pixel ratio for better performance
+        performance={{ min: 0.5 }} // Adaptive performance
       >
         <Suspense fallback={null}>
+          {/* Adaptive performance monitoring */}
+          <AdaptiveDpr pixelated />
+          <AdaptiveEvents />
+          <PerformanceMonitor 
+            onIncline={() => console.log('Performance improving')}
+            onDecline={() => console.log('Performance declining')}
+            flipflops={3}
+            onFallback={() => console.log('Fallback triggered')}
+          />
+          
           <Scene />
         </Suspense>
         

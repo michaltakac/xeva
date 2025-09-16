@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useXR } from "@react-three/xr";
 import * as THREE from "three";
+import { forEachController } from "./controllerUtils";
 
 // Hand joint indices based on WebXR Hand Input spec
 const HAND_JOINTS = {
@@ -223,7 +224,7 @@ export function useHandTracking(
   useFrame(() => {
     if (!enabled || !session || !ref.current) return;
 
-    hands.forEach((hand: any, handedness: any) => {
+    forEachController(hands, (hand: any, handedness: any) => {
       const handStr = handedness as "left" | "right";
       const isPinching = handStr === "left" ? leftPinching : rightPinching;
       const wasPointing = handStr === "left" ? leftPointing : rightPointing;

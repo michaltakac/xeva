@@ -1,6 +1,6 @@
-import { Suspense, useRef, useState } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { XR, createXRStore, XROrigin } from '@react-three/xr'
+import { Suspense, useRef, useState, useEffect } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
+import { XR, createXRStore, XROrigin, useXR } from '@react-three/xr'
 import { 
   Sky, 
   Environment, 
@@ -14,16 +14,52 @@ import {
 import { useControls, XrevaPanelXR } from 'xreva'
 import * as THREE from 'three'
 
-// XR Store for managing XR session
+// XR Store for managing VR session with pass-through
+// Quest 3 uses immersive-vr with blend-mode for pass-through
 const xrStore = createXRStore({
   // Enable hand tracking for Quest 3
   hand: true,
-  // Enable hit testing for AR features
-  hitTest: true,
-  // Enable depth sensing if available
-  depthSensing: true,
-  // Enable dom overlay for 2D UI elements
-  domOverlay: true
+  // Enable controller tracking
+  controller: true,
+  // Disable features not needed for basic pass-through
+  hitTest: false,
+  anchors: false,
+  depthSensing: false,
+  // Disable dom overlay
+  domOverlay: false,
+  // Add foveation for better performance
+  foveation: 1,
+  // Use VR mode (Quest 3 pass-through uses VR with blend mode)
+  mode: 'immersive-vr',
+  // Request features for pass-through
+  sessionInit: {
+    optionalFeatures: [
+      'local-floor',
+      'bounded-floor',
+      'hand-tracking',
+      'layers'
+    ],
+    requiredFeatures: []
+  }
+})
+
+// Add error event listeners
+xrStore.subscribe((state) => {
+  if (state.session) {
+    console.log('[XR] Session created:', state.session);
+    
+    state.session.addEventListener('end', () => {
+      console.log('[XR] Session ended');
+    });
+    
+    state.session.addEventListener('inputsourceschange', (event) => {
+      console.log('[XR] Input sources changed:', event);
+    });
+    
+    state.session.addEventListener('visibilitychange', () => {
+      console.log('[XR] Visibility changed:', state.session.visibilityState);
+    });
+  }
 })
 
 // Main controllable 3D object with XREVA controls
@@ -32,16 +68,22 @@ function InteractiveObject() {
   
   // Leva-style controls
   const {
-    shape,
-    size,
-    color,
-    metalness,
-    roughness,
-    wireframe,
-    autoRotate,
-    rotationSpeed,
-    emissive,
-    emissiveIntensity
+    geometry: {
+      shape,
+      size,
+      wireframe
+    },
+    material: {
+      color,
+      metalness,
+      roughness,
+      emissive,
+      emissiveIntensity
+    },
+    animation: {
+      autoRotate,
+      rotationSpeed
+    }
   } = useControls('Object', {
     geometry: {
       shape: {
@@ -102,119 +144,216 @@ function InteractiveObject() {
   )
 }
 
-// Environment controls
+// Environment controls for AR (no backgrounds)
 function EnvironmentSettings() {
   const {
-    preset,
-    showGrid,
-    ambientIntensity
-  } = useControls('Environment', {
     lighting: {
-      preset: {
-        value: 'sunset',
-        options: ['sunset', 'dawn', 'night', 'warehouse', 'forest', 'apartment']
-      },
-      ambientIntensity: { value: 0.5, min: 0, max: 2, step: 0.1 }
+      ambientIntensity,
+      directionalIntensity
     },
-    effects: {
-      showGrid: { value: true }
+    helpers: {
+      showGrid,
+      showAxes
+    }
+  } = useControls('AR Environment', {
+    lighting: {
+      ambientIntensity: { value: 0.7, min: 0, max: 2, step: 0.1, label: 'Ambient Light' },
+      directionalIntensity: { value: 0.5, min: 0, max: 2, step: 0.1, label: 'Directional Light' }
+    },
+    helpers: {
+      showGrid: { value: false, label: 'Show Grid' },
+      showAxes: { value: false, label: 'Show Axes' }
     }
   })
   
   return (
     <>
-      <Sky distance={450000} />
-      <Environment preset={preset as any} background />
+      {/* No Sky or Environment background in AR mode - pass-through shows real world */}
+      {/* Only lighting to illuminate virtual objects */}
       <ambientLight intensity={ambientIntensity} />
-      <directionalLight position={[10, 10, 5]} intensity={1} castShadow />
+      <directionalLight 
+        position={[5, 10, 5]} 
+        intensity={directionalIntensity} 
+        castShadow 
+        shadow-mapSize={[1024, 1024]}
+      />
       
+      {/* Optional helpers for debugging spatial positioning */}
       {showGrid && (
-        <gridHelper args={[20, 20, '#444', '#222']} position={[0, 0, 0]} />
+        <gridHelper args={[10, 10, '#666', '#333']} position={[0, 0, 0]} />
       )}
       
-      <fog attach="fog" args={['#0a0a0a', 5, 50]} />
+      {showAxes && (
+        <axesHelper args={[2]} />
+      )}
     </>
   )
 }
 
-// Test objects for interaction
+// AR objects positioned in space (no floor/walls - we see real environment)
 function TestObjects() {
-  return (
-    <>
-      <Box position={[-2, 0.5, -2]} args={[1, 1, 1]}>
-        <meshStandardMaterial color="#4080ff" />
-      </Box>
-      
-      <Sphere position={[2, 0.5, -2]} args={[0.5, 32, 32]}>
-        <meshStandardMaterial color="#80ff40" />
-      </Sphere>
-      
-      <Torus position={[0, 0.5, -4]} args={[0.5, 0.2, 32, 32]}>
-        <meshStandardMaterial color="#ff4080" />
-      </Torus>
-      
-      {/* Floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[50, 50]} />
-        <meshStandardMaterial color="#1a1a1a" />
-      </mesh>
-      
-      {/* Walls for spatial anchoring tests */}
-      <mesh position={[0, 2.5, -5]} receiveShadow>
-        <planeGeometry args={[10, 5]} />
-        <meshStandardMaterial color="#2a2a2a" />
-      </mesh>
-    </>
-  )
-}
-
-// XR Scene with all panels
-function XRScene() {
-  const [panelMode, setPanelMode] = useState<'floating' | 'anchored' | 'handheld'>('floating')
+  const {
+    objects: {
+      showCube,
+      showSphere,
+      showTorus,
+      objectHeight
+    }
+  } = useControls('AR Objects', {
+    objects: {
+      showCube: { value: true, label: 'Show Cube' },
+      showSphere: { value: true, label: 'Show Sphere' },
+      showTorus: { value: true, label: 'Show Torus' },
+      objectHeight: { value: 1.2, min: 0.5, max: 2.5, step: 0.1, label: 'Height from Floor' }
+    }
+  })
   
   return (
     <>
-      {/* Main scene content */}
-      <EnvironmentSettings />
-      <InteractiveObject />
-      <TestObjects />
+      {/* Virtual objects positioned at user-defined height */}
+      {showCube && (
+        <Box position={[-1.5, objectHeight, -2]} args={[0.4, 0.4, 0.4]}>
+          <meshStandardMaterial 
+            color="#4080ff" 
+            metalness={0.5} 
+            roughness={0.3}
+            transparent
+            opacity={0.9} 
+          />
+        </Box>
+      )}
       
-      {/* Floating panel - dual-hand mode: left grabs, right interacts */}
+      {showSphere && (
+        <Sphere position={[1.5, objectHeight, -2]} args={[0.3, 32, 32]}>
+          <meshStandardMaterial 
+            color="#80ff40" 
+            metalness={0.5} 
+            roughness={0.3}
+            transparent
+            opacity={0.9} 
+          />
+        </Sphere>
+      )}
+      
+      {showTorus && (
+        <Torus position={[0, objectHeight, -3]} args={[0.3, 0.12, 32, 32]}>
+          <meshStandardMaterial 
+            color="#ff4080" 
+            metalness={0.5} 
+            roughness={0.3}
+            transparent
+            opacity={0.9} 
+          />
+        </Torus>
+      )}
+      
+      {/* No floor or walls - pass-through shows real environment */}
+    </>
+  )
+}
+
+// Pass-through enabler for Quest 3 with debugging
+function PassthroughEnabler() {
+  const { gl, scene } = useThree()
+  const { session, isPresenting } = useXR()
+  const [debugInfo, setDebugInfo] = useState<string>('')
+  
+  useEffect(() => {
+    console.log('[PassthroughEnabler] isPresenting:', isPresenting, 'session:', session)
+    
+    if (isPresenting && session) {
+      // Set transparent background for pass-through
+      scene.background = null
+      gl.setClearColor(0x000000, 0)
+      
+      // Log session properties for debugging
+      const info = [
+        `Session Mode: ${session.mode || 'unknown'}`,
+        `Environment Blend: ${session.environmentBlendMode || 'not available'}`,
+        `Visibility: ${session.visibilityState || 'unknown'}`,
+        `Rendering State: ${session.renderState ? 'available' : 'not available'}`,
+        `Base Layer: ${session.renderState?.baseLayer ? 'set' : 'not set'}`,
+      ].join('\n')
+      
+      setDebugInfo(info)
+      console.log('[PassthroughEnabler] Session info:\n', info)
+      
+      // Check if we're in the right mode for Quest 3
+      if (session.environmentBlendMode === 'opaque') {
+        console.warn('[PassthroughEnabler] Environment blend mode is opaque - pass-through may not work')
+      }
+    } else {
+      setDebugInfo('')
+    }
+  }, [isPresenting, session, gl, scene])
+  
+  // Show debug info in XR
+  if (isPresenting && debugInfo) {
+    return (
+      <Text
+        position={[0, 0.5, -1]}
+        fontSize={0.03}
+        color="#00ff00"
+        anchorX="center"
+        anchorY="middle"
+        maxWidth={2}
+      >
+        {debugInfo}
+      </Text>
+    )
+  }
+  
+  return null
+}
+
+// XR Scene with all panels and error handling
+function XRScene() {
+  const [panelMode, setPanelMode] = useState<'floating' | 'anchored' | 'handheld'>('floating')
+  const { session, isPresenting } = useXR()
+  
+  // Log scene mounting
+  useEffect(() => {
+    console.log('[XRScene] Mounted, isPresenting:', isPresenting)
+    return () => {
+      console.log('[XRScene] Unmounted')
+    }
+  }, [])
+  
+  useEffect(() => {
+    console.log('[XRScene] Presentation state changed:', isPresenting)
+  }, [isPresenting])
+  
+  return (
+    <>
+      {/* Enable pass-through */}
+      <PassthroughEnabler />
+      
+      {/* Basic test content first to ensure XR works */}
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 5]} intensity={0.5} />
+      
+      {/* Simple test object to verify pass-through */}
+      <Box position={[0, 1.5, -2]} args={[0.5, 0.5, 0.5]}>
+        <meshStandardMaterial color="#ff6030" />
+      </Box>
+      
+      {/* Main scene content - commented out temporarily for testing */}
+      {/* <EnvironmentSettings /> */}
+      {/* <InteractiveObject /> */}
+      {/* <TestObjects /> */}
+      
+      {/* Simplified floating panel for testing */}
       {panelMode === 'floating' && (
         <XrevaPanelXR
-          position={[1.5, 1.5, -2]}
-          rotation={[0, -0.3, 0]}
-          title="XR Controls (Dual-Hand)"
-          tabs={true}
-          dualHandMode={true} // Enable left-hand grab, right-hand interact
-          grabbable={{
-            enabled: true,
-            constraints: {
-              minDistance: 0.5,
-              maxDistance: 3,
-              snapToGrid: true,
-              gridSize: 0.1
-            },
-            hapticFeedback: {
-              onGrab: 0.3,
-              onRelease: 0.1,
-              onHover: 0.05
-            }
-          }}
-          handTracking={{
-            enabled: true,
-            gestures: {
-              pinch: true,
-              point: true
-            },
-            visualFeedback: {
-              highlightOnHover: true,
-              showRaycast: true
-            }
-          }}
+          position={[0, 1.2, -1.5]}
+          rotation={[0, 0, 0]}
+          title="Test Panel"
+          tabs={false}
+          grabbable={false}
+          handTracking={false}
           billboard={false}
-          width={500}
-          height={700}
+          width={400}
+          height={300}
         />
       )}
       
@@ -280,74 +419,19 @@ function XRScene() {
         </>
       )}
       
-      {/* Mode switcher - using regular 3D objects for now */}
-      <group position={[-2, 1.5, -1]} rotation={[0, 0.3, 0]}>
-          <Text
-            position={[0, 0.3, 0]}
-            fontSize={0.05}
-            color="white"
-            anchorX="center"
-          >
-            Select Panel Mode:
-          </Text>
-          
-          <Box
-            position={[-0.15, 0, 0]}
-            args={[0.2, 0.1, 0.02]}
-            onClick={() => setPanelMode('floating')}
-          >
-            <meshStandardMaterial color={panelMode === 'floating' ? '#4ade80' : '#666'} />
-          </Box>
-          <Text position={[-0.15, -0.08, 0]} fontSize={0.03} color="white" anchorX="center">
-            Floating
-          </Text>
-          
-          <Box
-            position={[0, 0, 0]}
-            args={[0.2, 0.1, 0.02]}
-            onClick={() => setPanelMode('anchored')}
-          >
-            <meshStandardMaterial color={panelMode === 'anchored' ? '#4ade80' : '#666'} />
-          </Box>
-          <Text position={[0, -0.08, 0]} fontSize={0.03} color="white" anchorX="center">
-            Anchored
-          </Text>
-          
-          <Box
-            position={[0.15, 0, 0]}
-            args={[0.2, 0.1, 0.02]}
-            onClick={() => setPanelMode('handheld')}
-          >
-            <meshStandardMaterial color={panelMode === 'handheld' ? '#4ade80' : '#666'} />
-          </Box>
-          <Text position={[0.15, -0.08, 0]} fontSize={0.03} color="white" anchorX="center">
-            Handheld
-          </Text>
-      </group>
+      {/* Mode switcher - commented out for testing */}
+      {/* <group position={[-2, 1.5, -1]} rotation={[0, 0.3, 0]}>
+      </group> */}
       
-      {/* Instructions */}
+      {/* Simple title */}
       <Text
-        position={[0, 3, -3]}
-        fontSize={0.2}
+        position={[0, 2.5, -2]}
+        fontSize={0.1}
         color="white"
         anchorX="center"
         anchorY="middle"
       >
-        XREVA XR Demo - Quest 3
-      </Text>
-      
-      <Text
-        position={[0, 2.7, -3]}
-        fontSize={0.08}
-        color="#aaa"
-        anchorX="center"
-        anchorY="middle"
-        maxWidth={3}
-        textAlign="center"
-      >
-        Dual-Hand Mode: LEFT hand grabs panel, RIGHT hand interacts{'\n'}
-        Left Grip: Grab panel | Right Trigger: Click controls{'\n'}
-        Try different panel modes!
+        XReva AR Test
       </Text>
     </>
   )
@@ -355,11 +439,49 @@ function XRScene() {
 
 // Main App component
 export default function XRDemo() {
+  const [xrSupported, setXrSupported] = useState(false)
+  
+  useEffect(() => {
+    // Check for VR support (Quest 3 pass-through uses VR mode)
+    if ('xr' in navigator) {
+      navigator.xr?.isSessionSupported('immersive-vr').then((supported) => {
+        console.log('[XR] VR session supported:', supported)
+        setXrSupported(supported)
+        
+        // Also log available session modes for debugging
+        if (navigator.xr) {
+          navigator.xr.isSessionSupported('immersive-ar').then((arSupported) => {
+            console.log('[XR] AR session supported:', arSupported)
+          })
+        }
+      })
+    }
+  }, [])
+  
   return (
     <>
       {/* Enter XR Button */}
       <button
-        onClick={() => xrStore.enterVR()}
+        onClick={async () => {
+          // Check if running on actual device vs emulator
+          const isEmulator = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1'
+          
+          if (!xrSupported && isEmulator) {
+            alert('WebXR not supported. Please use a WebXR-compatible browser or headset.')
+            return
+          }
+          
+          console.log('[XR] Attempting to enter VR mode...')
+          
+          try {
+            await xrStore.enterVR() // Quest 3 pass-through uses VR mode
+            console.log('[XR] Successfully requested VR session')
+          } catch (error) {
+            console.error('[XR] Failed to enter VR:', error)
+            alert(`Failed to enter VR: ${error.message || error}`)
+          }
+        }}
         style={{
           position: 'absolute',
           top: '20px',
@@ -375,17 +497,34 @@ export default function XRDemo() {
           zIndex: 1000
         }}
       >
-        Enter VR (Quest 3)
+        {xrSupported ? 'Enter AR Pass-through' : 'AR Not Supported (Use Quest 3)'}
       </button>
       
-      {/* Canvas with XR support */}
+      {/* Canvas with AR support and transparent background */}
       <Canvas
         shadows
         camera={{ position: [0, 1.6, 3], fov: 60 }}
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+        style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%',
+          background: 'transparent'
+        }}
+        gl={{ 
+          antialias: true,
+          alpha: true, // Enable transparency for AR
+          preserveDrawingBuffer: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          outputColorSpace: THREE.SRGBColorSpace,
+          powerPreference: "high-performance",
+          xrCompatible: true // Ensure XR compatibility
+        }}
+        dpr={[1, 2]}
       >
         <XR store={xrStore}>
-          <XROrigin />
+          <XROrigin position={[0, 0, 0]} />
           <Suspense fallback={null}>
             <XRScene />
           </Suspense>

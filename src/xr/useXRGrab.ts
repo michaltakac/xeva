@@ -2,6 +2,11 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useXR, useXRStore } from "@react-three/xr";
 import * as THREE from "three";
+import {
+  forEachController,
+  getControllerByHand,
+  type Handedness,
+} from "./controllerUtils";
 
 interface XRGrabOptions {
   enabled?: boolean;
@@ -52,7 +57,7 @@ export function useXRGrab(
   // Use the correct v6 API
   const store = useXRStore();
   const session = useXR((state) => state.session);
-  const controllers = useXR((state) => (state as any).controllers || []);
+  const controllers = useXR((state) => (state as any).controllers);
   // const hands = useXR((state) => (state as any).hands || [])
 
   const [isGrabbed, setIsGrabbed] = useState(false);
@@ -88,7 +93,7 @@ export function useXRGrab(
       if (!session) return;
 
       // Find the input source for this controller
-      const controller = controllers.get(handedness);
+      const controller = getControllerByHand(controllers, handedness);
       if (!controller?.inputSource?.gamepad?.hapticActuators?.[0]) return;
 
       controller.inputSource.gamepad.hapticActuators[0].pulse(
@@ -109,20 +114,20 @@ export function useXRGrab(
       if (isGrabbed) return;
 
       // Determine handedness from the controller
-      let handedness: "left" | "right" | null = null;
-      controllers.forEach((controller: any, hand: any) => {
+      let handedness: Handedness = null;
+      forEachController(controllers, (controller, hand) => {
         if (
-          controller.controller === event.target ||
-          controller.grip === event.target
+          controller?.controller === event.target ||
+          controller?.grip === event.target
         ) {
-          handedness = hand as "left" | "right";
+          handedness = hand;
         }
       });
 
       if (!handedness || !ref.current) return;
 
       // Check if ray intersects with panel
-      const controller = controllers.get(handedness);
+      const controller = getControllerByHand(controllers, handedness);
       if (!controller) return;
 
       // Get ray direction
@@ -172,23 +177,23 @@ export function useXRGrab(
       if (!isGrabbed) return;
 
       // Determine handedness
-      let handedness: "left" | "right" | null = null;
-      controllers.forEach((controller: any, hand: any) => {
+      let handedness: Handedness = null;
+      forEachController(controllers, (controller, hand) => {
         if (
-          controller.controller === event.target ||
-          controller.grip === event.target
+          controller?.controller === event.target ||
+          controller?.grip === event.target
         ) {
-          handedness = hand as "left" | "right";
+          handedness = hand;
         }
       });
 
-      if (handedness === grabbedBy) {
+      if (handedness && handedness === grabbedBy) {
         setIsGrabbed(false);
         setGrabbedBy(null);
         setGrabbedController(null);
 
         // Haptic feedback
-        if (handedness) applyHapticFeedback(handedness, releaseHaptic);
+        applyHapticFeedback(handedness, releaseHaptic);
 
         // Callback
         onRelease?.();
@@ -196,24 +201,24 @@ export function useXRGrab(
     };
 
     // Add event listeners to all controllers
-    controllers.forEach((controller: any) => {
-      controller.controller.addEventListener(
+    forEachController(controllers, (controller) => {
+      controller?.controller?.addEventListener(
         "selectstart",
         handleSelectStart as any,
       );
-      controller.controller.addEventListener(
+      controller?.controller?.addEventListener(
         "selectend",
         handleSelectEnd as any,
       );
     });
 
     return () => {
-      controllers.forEach((controller: any) => {
-        controller.controller.removeEventListener(
+      forEachController(controllers, (controller) => {
+        controller?.controller?.removeEventListener(
           "selectstart",
           handleSelectStart as any,
         );
-        controller.controller.removeEventListener(
+        controller?.controller?.removeEventListener(
           "selectend",
           handleSelectEnd as any,
         );
@@ -239,16 +244,16 @@ export function useXRGrab(
       if (isGrabbed) return;
 
       // Determine handedness
-      let handedness: "left" | "right" | null = null;
-      controllers.forEach((controller: any, hand: any) => {
-        if (controller.grip === event.target) {
-          handedness = hand as "left" | "right";
+      let handedness: Handedness = null;
+      forEachController(controllers, (controller, hand) => {
+        if (controller?.grip === event.target) {
+          handedness = hand;
         }
       });
 
       if (!handedness || !ref.current) return;
 
-      const controller = controllers.get(handedness);
+      const controller = getControllerByHand(controllers, handedness);
       if (!controller) return;
 
       // Check distance for grip-based grabbing
@@ -285,20 +290,20 @@ export function useXRGrab(
       if (!isGrabbed) return;
 
       // Determine handedness
-      let handedness: "left" | "right" | null = null;
-      controllers.forEach((controller: any, hand: any) => {
-        if (controller.grip === event.target) {
-          handedness = hand as "left" | "right";
+      let handedness: Handedness = null;
+      forEachController(controllers, (controller, hand) => {
+        if (controller?.grip === event.target) {
+          handedness = hand;
         }
       });
 
-      if (handedness === grabbedBy) {
+      if (handedness && handedness === grabbedBy) {
         setIsGrabbed(false);
         setGrabbedBy(null);
         setGrabbedController(null);
 
         // Haptic feedback
-        if (handedness) applyHapticFeedback(handedness, releaseHaptic);
+        applyHapticFeedback(handedness, releaseHaptic);
 
         // Callback
         onRelease?.();
@@ -306,21 +311,24 @@ export function useXRGrab(
     };
 
     // Add squeeze listeners for grip-based interaction
-    controllers.forEach((controller: any) => {
-      controller.grip.addEventListener(
+    forEachController(controllers, (controller) => {
+      controller?.grip?.addEventListener(
         "squeezestart",
         handleSqueezeStart as any,
       );
-      controller.grip.addEventListener("squeezeend", handleSqueezeEnd as any);
+      controller?.grip?.addEventListener(
+        "squeezeend",
+        handleSqueezeEnd as any,
+      );
     });
 
     return () => {
-      controllers.forEach((controller: any) => {
-        controller.grip.removeEventListener(
+      forEachController(controllers, (controller) => {
+        controller?.grip?.removeEventListener(
           "squeezestart",
           handleSqueezeStart as any,
         );
-        controller.grip.removeEventListener(
+        controller?.grip?.removeEventListener(
           "squeezeend",
           handleSqueezeEnd as any,
         );
@@ -393,14 +401,15 @@ export function useXRGrab(
     let newHovered = false;
 
     // Check all controllers for hover
-    controllers.forEach((controller: any, handedness: any) => {
+    forEachController(controllers, (controller, hand) => {
+      if (!controller?.controller) return;
+
       // Get ray direction
       tempMatrix.current.identity();
       tempMatrix.current.extractRotation(controller.controller.matrixWorld);
       tempDirection.current.set(0, 0, -1);
       tempDirection.current.applyMatrix4(tempMatrix.current);
 
-      // Set up raycaster
       raycaster.current.set(
         controller.controller.position,
         tempDirection.current,
@@ -410,8 +419,8 @@ export function useXRGrab(
       if (intersects.length > 0) {
         newHovered = true;
 
-        if (!isHovered && hoverHaptic > 0) {
-          applyHapticFeedback(handedness as "left" | "right", hoverHaptic, 20);
+        if (!isHovered && hoverHaptic > 0 && (hand === "left" || hand === "right")) {
+          applyHapticFeedback(hand, hoverHaptic, 20);
         }
       }
     });

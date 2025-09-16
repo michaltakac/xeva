@@ -2,6 +2,11 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useXR } from "@react-three/xr";
 import * as THREE from "three";
+import {
+  forEachController,
+  getControllerByHand,
+  type Handedness,
+} from "./controllerUtils";
 
 interface DualHandInteractionOptions {
   enabled?: boolean;
@@ -49,7 +54,7 @@ export function useDualHandInteraction(
 
   // const store = useXRStore()
   const session = useXR((state) => state.session);
-  const controllers = useXR((state) => (state as any).controllers || []);
+  const controllers = useXR((state) => (state as any).controllers);
 
   // State
   const [isGrabbed, setIsGrabbed] = useState(false);
@@ -80,7 +85,7 @@ export function useDualHandInteraction(
     ) => {
       if (!session) return;
 
-      const controller = controllers.get(handedness);
+      const controller = getControllerByHand(controllers, handedness);
       if (!controller?.inputSource?.gamepad?.hapticActuators?.[0]) return;
 
       controller.inputSource.gamepad.hapticActuators[0].pulse(
@@ -112,19 +117,19 @@ export function useDualHandInteraction(
       if (isGrabbed) return;
 
       // Determine which hand
-      let handedness: "left" | "right" | null = null;
-      controllers.forEach((controller: any, hand: any) => {
+      let handedness: Handedness = null;
+      forEachController(controllers, (controller, hand) => {
         if (
-          controller.controller === event.target ||
-          controller.grip === event.target
+          controller?.controller === event.target ||
+          controller?.grip === event.target
         ) {
-          handedness = hand as "left" | "right";
+          handedness = hand;
         }
       });
 
       if (!handedness || !canGrab(handedness) || !panelRef.current) return;
 
-      const controller = controllers.get(handedness);
+      const controller = getControllerByHand(controllers, handedness);
       if (!controller) return;
 
       // Check distance
@@ -164,24 +169,23 @@ export function useDualHandInteraction(
       if (!isGrabbed) return;
 
       // Determine which hand
-      let handedness: "left" | "right" | null = null;
-      controllers.forEach((controller: any, hand: any) => {
+      let handedness: Handedness = null;
+      forEachController(controllers, (controller, hand) => {
         if (
-          controller.controller === event.target ||
-          controller.grip === event.target
+          controller?.controller === event.target ||
+          controller?.grip === event.target
         ) {
-          handedness = hand as "left" | "right";
+          handedness = hand;
         }
       });
 
-      if (handedness === grabbedBy) {
+      if (handedness && handedness === grabbedBy) {
         setIsGrabbed(false);
         setGrabbedBy(null);
         setGrabbedController(null);
 
         // Haptic feedback
-        if (handedness)
-          applyHapticFeedback(handedness, hapticFeedback.onRelease || 0.1);
+        applyHapticFeedback(handedness, hapticFeedback.onRelease || 0.1);
 
         // Callback
         if (handedness) onRelease?.(handedness);
@@ -189,44 +193,44 @@ export function useDualHandInteraction(
     };
 
     // Add listeners based on button settings
-    controllers.forEach((controller: any) => {
+    forEachController(controllers, (controller) => {
       if (grabButton === "trigger" || grabButton === "both") {
-        controller.controller.addEventListener(
+        controller?.controller?.addEventListener(
           "selectstart",
           handleGrabStart as any,
         );
-        controller.controller.addEventListener(
+        controller?.controller?.addEventListener(
           "selectend",
           handleGrabEnd as any,
         );
       }
       if (grabButton === "squeeze" || grabButton === "both") {
-        controller.grip.addEventListener(
+        controller?.grip?.addEventListener(
           "squeezestart",
           handleGrabStart as any,
         );
-        controller.grip.addEventListener("squeezeend", handleGrabEnd as any);
+        controller?.grip?.addEventListener("squeezeend", handleGrabEnd as any);
       }
     });
 
     return () => {
-      controllers.forEach((controller: any) => {
+      forEachController(controllers, (controller) => {
         if (grabButton === "trigger" || grabButton === "both") {
-          controller.controller.removeEventListener(
+          controller?.controller?.removeEventListener(
             "selectstart",
             handleGrabStart as any,
           );
-          controller.controller.removeEventListener(
+          controller?.controller?.removeEventListener(
             "selectend",
             handleGrabEnd as any,
           );
         }
         if (grabButton === "squeeze" || grabButton === "both") {
-          controller.grip.removeEventListener(
+          controller?.grip?.removeEventListener(
             "squeezestart",
             handleGrabStart as any,
           );
-          controller.grip.removeEventListener(
+          controller?.grip?.removeEventListener(
             "squeezeend",
             handleGrabEnd as any,
           );
@@ -254,16 +258,16 @@ export function useDualHandInteraction(
       event: THREE.Event & { target: THREE.XRTargetRaySpace },
     ) => {
       // Determine which hand
-      let handedness: "left" | "right" | null = null;
-      controllers.forEach((controller: any, hand: any) => {
-        if (controller.controller === event.target) {
-          handedness = hand as "left" | "right";
+      let handedness: Handedness = null;
+      forEachController(controllers, (controller, hand) => {
+        if (controller?.controller === event.target) {
+          handedness = hand;
         }
       });
 
       if (!handedness || !canInteract(handedness) || !panelRef.current) return;
 
-      const controller = controllers.get(handedness);
+      const controller = getControllerByHand(controllers, handedness);
       if (!controller) return;
 
       // Raycast to find what control we're pointing at
@@ -299,22 +303,22 @@ export function useDualHandInteraction(
     };
 
     // Add interaction listeners
-    controllers.forEach((controller: any) => {
+    forEachController(controllers, (controller) => {
       if (interactButton === "trigger") {
-        controller.controller.addEventListener(
+        controller?.controller?.addEventListener(
           "selectstart",
           handleInteractStart as any,
         );
-        controller.controller.addEventListener(
+        controller?.controller?.addEventListener(
           "selectend",
           handleInteractEnd as any,
         );
       } else if (interactButton === "squeeze") {
-        controller.grip.addEventListener(
+        controller?.grip?.addEventListener(
           "squeezestart",
           handleInteractStart as any,
         );
-        controller.grip.addEventListener(
+        controller?.grip?.addEventListener(
           "squeezeend",
           handleInteractEnd as any,
         );
@@ -322,22 +326,22 @@ export function useDualHandInteraction(
     });
 
     return () => {
-      controllers.forEach((controller: any) => {
+      forEachController(controllers, (controller) => {
         if (interactButton === "trigger") {
-          controller.controller.removeEventListener(
+          controller?.controller?.removeEventListener(
             "selectstart",
             handleInteractStart as any,
           );
-          controller.controller.removeEventListener(
+          controller?.controller?.removeEventListener(
             "selectend",
             handleInteractEnd as any,
           );
         } else if (interactButton === "squeeze") {
-          controller.grip.removeEventListener(
+          controller?.grip?.removeEventListener(
             "squeezestart",
             handleInteractStart as any,
           );
-          controller.grip.removeEventListener(
+          controller?.grip?.removeEventListener(
             "squeezeend",
             handleInteractEnd as any,
           );
@@ -384,8 +388,9 @@ export function useDualHandInteraction(
 
     let newHovered: THREE.Object3D | null = null;
 
-    controllers.forEach((controller: any, handedness: any) => {
-      if (!canInteract(handedness as "left" | "right")) return;
+    forEachController(controllers, (controller, handedness) => {
+      if (!handedness || !canInteract(handedness)) return;
+      if (!controller?.controller) return;
 
       // Raycast for hover
       tempMatrix.current.identity();
@@ -406,11 +411,7 @@ export function useDualHandInteraction(
         newHovered = intersects[0].object as any;
 
         if (!hoveredControl && hapticFeedback.onHover) {
-          applyHapticFeedback(
-            handedness as "left" | "right",
-            hapticFeedback.onHover,
-            20,
-          );
+          applyHapticFeedback(handedness, hapticFeedback.onHover, 20);
         }
       }
     });
@@ -423,7 +424,7 @@ export function useDualHandInteraction(
     if (!hoveredControl || !interactHand || interactHand === "both")
       return null;
 
-    const controller = controllers.get(interactHand);
+    const controller = getControllerByHand(controllers, interactHand);
     if (!controller) return null;
 
     // Create a line from controller to hovered control

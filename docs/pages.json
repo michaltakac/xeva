@@ -1,0 +1,32 @@
+[
+  {
+    "id": "home",
+    "file": "README.md",
+    "title": "XREVA"
+  },
+  {
+    "id": "dual-hand-test",
+    "file": "dual-hand-test.md",
+    "title": "🎮 Dual-Hand Interaction Testing Guide"
+  },
+  {
+    "id": "quest3-quickstart",
+    "file": "quest3-quickstart.md",
+    "title": "🎮 Quest 3 Quick Start"
+  },
+  {
+    "id": "implementation-status",
+    "file": "implementation-status.md",
+    "title": "Xreva Implementation Status"
+  },
+  {
+    "id": "xr-testing-guide",
+    "file": "xr-testing-guide.md",
+    "title": "Xreva XR Testing Guide for Meta Quest 3"
+  },
+  {
+    "id": "xreva-xr-design",
+    "file": "xreva-xr-design.md",
+    "title": "Xreva XR/VR Design Document"
+  }
+]

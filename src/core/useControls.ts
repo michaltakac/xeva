@@ -18,10 +18,18 @@ export interface ControlConfig {
   options?: string[] | number[];
   label?: string;
   onChange?: (value: ControlValue) => void;
+  /**
+   * Whether the control should update reactively as the user interacts.
+   * Matches Leva's transient flag for parity.
+   */
+  transient?: boolean;
 }
 
 export interface FolderConfig {
-  [key: string]: ControlConfig | FolderConfig;
+  folder: ControlsSchema;
+  collapsed?: boolean;
+  order?: number;
+  label?: string;
 }
 
 export interface ControlsSchema {
@@ -32,7 +40,7 @@ export interface ControlsSchema {
 interface ControlData {
   key: string;
   path: string[];
-  config: ControlConfig;
+  config: ControlConfig | Record<string, unknown>;
   value: ControlValue;
   type:
     | "number"
@@ -45,11 +53,17 @@ interface ControlData {
     | "folder";
 }
 
+interface FolderState {
+  children: string[];
+  config?: Record<string, unknown>;
+}
+
 // Store interface
 interface XrevaStore {
   controls: Map<string, ControlData>;
   values: Record<string, ControlValue>;
-  folders: Map<string, string[]>; // folder path -> child keys
+  folders: Map<string, FolderState>; // folder path -> state
+  controlsArray: ControlData[]; // Cached array of controls
 
   register: (path: string, config: ControlConfig | FolderConfig) => void;
   setValue: (path: string, value: ControlValue) => void;
@@ -58,6 +72,59 @@ interface XrevaStore {
   getAllControls: () => ControlData[];
   getFolder: (path: string) => ControlData[];
   reset: () => void;
+}
+
+const ID_PREFIX = "xreva";
+
+function createId() {
+  return `${ID_PREFIX}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function isVector3Like(value: unknown) {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "x" in (value as any) &&
+    "y" in (value as any) &&
+    "z" in (value as any)
+  );
+}
+
+function serializeSchema(schema: ControlsSchema): string {
+  const seen = new WeakSet();
+  return JSON.stringify(schema, (_key, value) => {
+    if (typeof value === "function") {
+      return "__fn__";
+    }
+    if (typeof value === "object" && value !== null) {
+      if (seen.has(value as object)) {
+        return "__ref__";
+      }
+      seen.add(value as object);
+    }
+    return value;
+  });
+}
+
+function setNestedValue(
+  target: Record<string, any>,
+  path: string[],
+  value: unknown,
+): void {
+  let cursor = target;
+  for (let i = 0; i < path.length - 1; i++) {
+    const part = path[i];
+    if (cursor[part] === undefined) {
+      cursor[part] = {};
+    }
+    cursor = cursor[part];
+  }
+  cursor[path[path.length - 1]] = value;
+}
+
+function capitalize(value: string) {
+  if (!value) return value;
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 // Determine control type from config/value
@@ -75,7 +142,7 @@ function inferControlType(
   if (typeof value === "string" && value.startsWith("#")) return "color";
 
   // Vector3
-  if (typeof value === "object" && value !== null && "x" in value)
+  if (isVector3Like(value))
     return "vector3";
 
   // Number
@@ -97,11 +164,11 @@ function parseSchema(
 ): {
   controls: Map<string, ControlData>;
   values: Record<string, ControlValue>;
-  folders: Map<string, string[]>;
+  folders: Map<string, FolderState>;
 } {
   const controls = new Map<string, ControlData>();
   const values: Record<string, ControlValue> = {};
-  const folders = new Map<string, string[]>();
+  const folders = new Map<string, FolderState>();
 
   Object.entries(schema).forEach(([key, item]) => {
     const path = [...parentPath, key];
@@ -111,22 +178,24 @@ function parseSchema(
     const isFolder =
       typeof item === "object" &&
       item !== null &&
-      !("value" in item) &&
+      !("value" in (item as Record<string, unknown>)) &&
       typeof item !== "function" &&
-      !item.hasOwnProperty("x"); // not a vector3
+      !isVector3Like(item);
 
     if (isFolder) {
-      // It's a folder
+      const rawFolder = item as Record<string, any>;
+      const folderSchema = (rawFolder.folder as ControlsSchema) ?? (item as ControlsSchema);
+      const folderConfig = rawFolder.folder ? { ...rawFolder, folder: undefined } : {};
+
       controls.set(pathStr, {
         key,
         path,
-        config: {},
+        config: folderConfig,
         value: "",
         type: "folder",
       });
 
-      // Parse folder contents
-      const folderResult = parseSchema(item as ControlsSchema, path);
+      const folderResult = parseSchema(folderSchema, path);
       folderResult.controls.forEach((control, key) =>
         controls.set(key, control),
       );
@@ -136,25 +205,15 @@ function parseSchema(
       );
 
       // Track folder children
-      const childKeys = Object.keys(item as ControlsSchema).map((childKey) =>
+      const childKeys = Object.keys(folderSchema).map((childKey) =>
         [...path, childKey].join("."),
       );
-      folders.set(pathStr, childKeys);
+      folders.set(pathStr, {
+        children: childKeys,
+        config: folderConfig,
+      });
     } else {
-      // It's a control
-      let config: ControlConfig;
-      let value: ControlValue;
-
-      if (typeof item === "object" && item !== null && "value" in item) {
-        // Config object
-        config = item as ControlConfig;
-        value = config.value!;
-      } else {
-        // Direct value
-        config = { value: item as ControlValue };
-        value = item as ControlValue;
-      }
-
+      const { config, value } = normalizeControlConfig(item as any, key);
       const type = inferControlType(value, config);
 
       controls.set(pathStr, {
@@ -174,12 +233,55 @@ function parseSchema(
   return { controls, values, folders };
 }
 
+function normalizeControlConfig(
+  item: ControlValue | ControlConfig,
+  key: string,
+): { config: ControlConfig; value: ControlValue } {
+  if (typeof item === "object" && item !== null && "value" in item) {
+    const cfg = item as ControlConfig;
+    const value =
+      cfg.value !== undefined
+        ? cfg.value
+        : resolveDefaultValue(cfg, key);
+    return {
+      config: { ...cfg, value },
+      value,
+    };
+  }
+
+  return {
+    config: { value: item as ControlValue },
+    value: item as ControlValue,
+  };
+}
+
+function resolveDefaultValue(config: ControlConfig, key: string): ControlValue {
+  if (config.options) {
+    const options = Array.isArray(config.options)
+      ? config.options
+      : Object.values(config.options);
+    if (options.length > 0) {
+      return options[0] as ControlValue;
+    }
+  }
+
+  if (config.min !== undefined) {
+    return config.min;
+  }
+
+  console.warn(
+    `[xreva] Control "${key}" is missing an initial value; defaulting to empty string.`,
+  );
+  return "";
+}
+
 // Global store
 export const useXrevaStore = create<XrevaStore>()(
   subscribeWithSelector((set, get) => ({
     controls: new Map(),
     values: {},
     folders: new Map(),
+    controlsArray: [],
 
     register: () => {
       // Implementation handled by parseSchema in useControls hook
@@ -193,19 +295,25 @@ export const useXrevaStore = create<XrevaStore>()(
         // Update control data
         const newControls = new Map(state.controls);
         newControls.set(path, { ...control, value });
+        const newControlsArray = Array.from(newControls.values());
 
         // Call onChange if provided
-        if (control.config.onChange) {
-          control.config.onChange(value);
+        const onChange = (control.config as ControlConfig).onChange;
+        if (typeof onChange === "function") {
+          onChange(value);
         }
 
         // Don't store button values
         if (control.type === "button") {
-          return { controls: newControls };
+          return { 
+            controls: newControls,
+            controlsArray: newControlsArray
+          };
         }
 
         return {
           controls: newControls,
+          controlsArray: newControlsArray,
           values: {
             ...state.values,
             [path]: value,
@@ -220,11 +328,12 @@ export const useXrevaStore = create<XrevaStore>()(
 
     getValues: (prefix) => {
       const allValues = get().values;
-      if (!prefix) return allValues;
+      if (!prefix) return { ...allValues };
 
       const filtered: Record<string, ControlValue> = {};
       Object.keys(allValues).forEach((key) => {
-        if (key.startsWith(prefix)) {
+        if (key === prefix) return;
+        if (key.startsWith(`${prefix}.`)) {
           const shortKey = key.slice(prefix.length + 1); // +1 for the dot
           filtered[shortKey] = allValues[key];
         }
@@ -233,18 +342,19 @@ export const useXrevaStore = create<XrevaStore>()(
     },
 
     getAllControls: () => {
-      return Array.from(get().controls.values());
+      return get().controlsArray;
     },
 
     getFolder: (path) => {
-      const children = get().folders.get(path) || [];
-      return children
+      const folder = get().folders.get(path);
+      if (!folder) return [];
+      return folder.children
         .map((childPath) => get().controls.get(childPath)!)
         .filter(Boolean);
     },
 
     reset: () => {
-      set({ controls: new Map(), values: {}, folders: new Map() });
+      set({ controls: new Map(), values: {}, folders: new Map(), controlsArray: [] });
     },
   })),
 );
@@ -254,39 +364,95 @@ export function useControls(
   nameOrSchema: string | ControlsSchema,
   schema?: ControlsSchema,
 ) {
-  const name = typeof nameOrSchema === "string" ? nameOrSchema : "controls";
+  const generatedNameRef = useRef<string | undefined>(undefined);
+  if (!generatedNameRef.current && typeof nameOrSchema !== "string") {
+    generatedNameRef.current = createId();
+  }
+
+  const name =
+    typeof nameOrSchema === "string"
+      ? nameOrSchema
+      : generatedNameRef.current ?? createId();
   const actualSchema =
     typeof nameOrSchema === "string" ? schema! : nameOrSchema;
 
   const store = useXrevaStore();
   const initialized = useRef(false);
+  const schemaSignatureRef = useRef<string | null>(null);
+
+  const schemaSignature = useMemo(
+    () => serializeSchema(actualSchema),
+    [actualSchema],
+  );
+
+  const parsedSchema = useMemo(
+    () => parseSchema(actualSchema, [name]),
+    [schemaSignature, name],
+  );
+
+  const fallbackValues = useMemo(() => {
+    const fallback: Record<string, ControlValue> = {};
+    Object.entries(parsedSchema.values).forEach(([path, value]) => {
+      if (path.startsWith(`${name}.`)) {
+        const shortKey = path.slice(name.length + 1);
+        fallback[shortKey] = value;
+      }
+    });
+    return fallback;
+  }, [parsedSchema, name]);
 
   // Initialize controls on first render
   useEffect(() => {
-    if (!initialized.current) {
-      const parsed = parseSchema(actualSchema, [name]);
+    const hasChanged = schemaSignatureRef.current !== schemaSignature;
 
-      useXrevaStore.setState((state) => ({
-        controls: new Map([...state.controls, ...parsed.controls]),
-        values: { ...state.values, ...parsed.values },
-        folders: new Map([...state.folders, ...parsed.folders]),
-      }));
+    if (!initialized.current || hasChanged) {
+      useXrevaStore.setState((state) => {
+        const newControls = new Map(state.controls);
+        const newValues = { ...state.values };
+        const newFolders = new Map(state.folders);
 
+        const prefix = `${name}.`;
+        Array.from(newControls.keys()).forEach((key) => {
+          if (key === name || key.startsWith(prefix)) {
+            newControls.delete(key);
+            delete newValues[key];
+            newFolders.delete(key);
+          }
+        });
+
+        parsedSchema.controls.forEach((control, controlPath) => {
+          newControls.set(controlPath, control);
+        });
+        Object.entries(parsedSchema.values).forEach(([path, value]) => {
+          newValues[path] = value;
+        });
+        parsedSchema.folders.forEach((folder, folderPath) => {
+          newFolders.set(folderPath, folder);
+        });
+
+        return {
+          controls: newControls,
+          controlsArray: Array.from(newControls.values()),
+          values: newValues,
+          folders: newFolders,
+        };
+      });
+
+      schemaSignatureRef.current = schemaSignature;
       initialized.current = true;
     }
 
     return () => {
       // Cleanup on unmount
       if (initialized.current) {
-        const prefix = name + ".";
+        const prefix = `${name}.`;
         useXrevaStore.setState((state) => {
           const newControls = new Map(state.controls);
           const newValues = { ...state.values };
           const newFolders = new Map(state.folders);
 
-          // Remove all controls with this prefix
           Array.from(newControls.keys()).forEach((key) => {
-            if (key.startsWith(prefix) || key === name) {
+            if (key === name || key.startsWith(prefix)) {
               newControls.delete(key);
               delete newValues[key];
               newFolders.delete(key);
@@ -295,17 +461,32 @@ export function useControls(
 
           return {
             controls: newControls,
+            controlsArray: Array.from(newControls.values()),
             values: newValues,
             folders: newFolders,
           };
         });
         initialized.current = false;
+        schemaSignatureRef.current = null;
       }
     };
-  }, []);
+  }, [schemaSignature, name, parsedSchema]);
 
   // Subscribe to value changes
-  const values = useXrevaStore((state) => state.getValues(name));
+  const storeValues = useXrevaStore((state) => state.values);
+  const values = useMemo(() => {
+    const scoped: Record<string, ControlValue> = { ...fallbackValues };
+    const prefix = `${name}.`;
+
+    Object.entries(storeValues).forEach(([path, value]) => {
+      if (path === name) return;
+      if (path.startsWith(prefix)) {
+        scoped[path.slice(prefix.length)] = value;
+      }
+    });
+
+    return scoped;
+  }, [storeValues, fallbackValues, name]);
 
   // Create setters
   const setters = useMemo(() => {
@@ -319,20 +500,27 @@ export function useControls(
   // Return values with setters
   return useMemo(() => {
     const result: Record<string, any> = {};
-    Object.keys(values).forEach((key) => {
-      result[key] = values[key];
-      // Add setter as a property (for compatibility)
-      if (setters[key]) {
-        Object.defineProperty(
-          result,
-          `set${key.charAt(0).toUpperCase()}${key.slice(1)}`,
-          {
-            value: setters[key],
-            enumerable: false,
-          },
-        );
+
+    Object.entries(values).forEach(([relativePath, value]) => {
+      const parts = relativePath.split(".");
+      setNestedValue(result, parts, value);
+
+      const setter = setters[relativePath];
+      if (setter) {
+        const leafKey = parts[parts.length - 1];
+        const parentPath = parts.slice(0, -1);
+        let parent = result as Record<string, any>;
+        parentPath.forEach((segment) => {
+          parent = parent[segment];
+        });
+
+        Object.defineProperty(parent, `set${capitalize(leafKey)}`, {
+          value: setter,
+          enumerable: false,
+        });
       }
     });
+
     return result;
   }, [values, setters]);
 }

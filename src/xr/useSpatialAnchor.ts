@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useXR } from "@react-three/xr";
 import * as THREE from "three";
+import { getControllerByHand } from "./controllerUtils";
 
 interface AnchorConfig {
   type:
@@ -140,7 +141,10 @@ export function useSpatialAnchor(
       case "controller":
         // Anchor to controller
         if (typeof anchor.target === "string") {
-          const controller = controllers.get(anchor.target);
+          const controller =
+            typeof anchor.target === "string"
+              ? getControllerByHand(controllers, anchor.target)
+              : undefined;
           if (controller) {
             controller.grip.getWorldPosition(anchorPosition);
             controller.grip.getWorldQuaternion(anchorRotation);

@@ -248,32 +248,47 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-tsx.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
     <script>
-        // Documentation pages mapping
-        const pages = {
-            'home': 'README.md',
-            'quest3-quickstart': 'quest3-quickstart.md',
-            'xr-testing-guide': 'xr-testing-guide.md',
-            'xreva-xr-design': 'xreva-xr-design.md',
-            'dual-hand-test': 'dual-hand-test.md',
-            'implementation-status': 'implementation-status.md'
-        };
-        
-        // Load and render markdown content
-        async function loadContent(page) {
+        let pageManifest = [];
+
+        function resolvePage(pageId) {
+            return pageManifest.find((entry) => entry.id === pageId) || pageManifest[0];
+        }
+
+        function buildNavigation() {
+            const navList = document.getElementById('sidebar-nav');
+            navList.innerHTML = '';
+
+            pageManifest.forEach((entry, index) => {
+                const li = document.createElement('li');
+                const anchor = document.createElement('a');
+                anchor.className = 'nav-link' + (index === 0 ? ' active' : '');
+                anchor.href = `#${entry.id}`;
+                anchor.textContent = entry.title;
+                li.appendChild(anchor);
+                navList.appendChild(li);
+            });
+
+            attachNavLinkHandlers();
+        }
+
+        async function loadContent(pageId) {
             const contentArea = document.getElementById('content-area');
-            
+            const pageEntry = resolvePage(pageId);
+
+            if (!pageEntry) {
+                contentArea.innerHTML = '<p>No documentation pages available.</p>';
+                return;
+            }
+
             try {
-                let file = pages[page] || pages['home'];
-                
-                // For README, fetch from parent directory
+                const file = pageEntry.file;
                 const url = file === 'README.md' ? '../README.md' : file;
-                
+
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('Failed to load content');
-                
+
                 const markdown = await response.text();
-                
-                // Configure marked
+
                 marked.setOptions({
                     highlight: function(code, lang) {
                         if (Prism.languages[lang]) {
@@ -284,25 +299,18 @@
                     breaks: true,
                     gfm: true
                 });
-                
-                // Render markdown
+
                 let html = marked.parse(markdown);
-                
-                // Add copy buttons to code blocks
+
                 html = html.replace(/<pre>/g, '<div class="code-block"><button class="copy-button" onclick="copyCode(this)">Copy</button><pre>');
                 html = html.replace(/<\/pre>/g, '</pre></div>');
-                
+
                 contentArea.innerHTML = html;
-                
-                // Update active nav link
+
                 document.querySelectorAll('.nav-link').forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href') === '#' + page) {
-                        link.classList.add('active');
-                    }
+                    link.classList.toggle('active', link.getAttribute('href') === '#' + pageEntry.id);
                 });
-                
-                // Scroll to top
+
                 window.scrollTo(0, 0);
             } catch (error) {
                 contentArea.innerHTML = `
@@ -312,7 +320,7 @@
                 `;
             }
         }
-        
+
         // Copy code function
         function copyCode(button) {
             const codeBlock = button.nextElementSibling;
@@ -335,18 +343,42 @@
             loadContent(hash);
         }
         
-        // Set up event listeners
-        window.addEventListener('hashchange', handleNavigation);
-        window.addEventListener('DOMContentLoaded', handleNavigation);
-        
-        // Handle nav link clicks
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const page = link.getAttribute('href').slice(1);
-                window.location.hash = page;
+        function attachNavLinkHandlers() {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const page = link.getAttribute('href').slice(1);
+                    window.location.hash = page;
+                });
             });
-        });
+        }
+
+        async function initDocs() {
+            try {
+                const response = await fetch('pages.json');
+                if (!response.ok) throw new Error('manifest missing');
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    pageManifest = data;
+                }
+            } catch (error) {
+                console.warn('[xreva-docs] Falling back to default manifest', error);
+                pageManifest = [
+                    { id: 'home', file: 'README.md', title: 'Home' },
+                    { id: 'quest3-quickstart', file: 'quest3-quickstart.md', title: 'Quest 3 Quickstart' },
+                    { id: 'xr-testing-guide', file: 'xr-testing-guide.md', title: 'XR Testing Guide' },
+                    { id: 'xreva-xr-design', file: 'xreva-xr-design.md', title: 'XR Design' },
+                    { id: 'dual-hand-test', file: 'dual-hand-test.md', title: 'Dual Hand Test' },
+                    { id: 'implementation-status', file: 'implementation-status.md', title: 'Implementation Status' }
+                ];
+            }
+
+            buildNavigation();
+            handleNavigation();
+        }
+
+        window.addEventListener('hashchange', handleNavigation);
+        window.addEventListener('DOMContentLoaded', initDocs);
     </script>
 </body>
 </html>

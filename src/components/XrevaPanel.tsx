@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Root, Container, Text as UIText } from "@react-three/uikit";
 import {
   Card,
@@ -7,8 +7,9 @@ import {
   Button,
   Toggle,
 } from "@react-three/uikit-default";
-import { useXrevaStore } from "../core/useControls";
 import { useFrame } from "@react-three/fiber";
+import { usePanelState } from "./usePanelState";
+import type { ControlConfig } from "../core/useControls";
 
 interface XrevaPanelProps {
   position?: [number, number, number];
@@ -37,46 +38,33 @@ export function XrevaPanel({
   tabs = true,
   billboard = false,
 }: XrevaPanelProps) {
-  const controls = useXrevaStore((state) => state.getAllControls());
-  const values = useXrevaStore((state) => state.values);
-  const setValue = useXrevaStore((state) => state.setValue);
-  // const folders = useXrevaStore(state => state.folders)
-
-  const [activeTab, setActiveTab] = useState<string | null>(null);
+  const { values, setValue, topLevelControls, folders, activeTab, setActiveTab } =
+    usePanelState(tabs);
   const rootRef = React.useRef<any>(null);
 
   // Billboard effect
   useFrame(({ camera }) => {
     if (billboard && rootRef.current) {
-      rootRef.current.lookAt(camera.position);
+      try {
+        if (rootRef.current.lookAt && typeof rootRef.current.lookAt === 'function') {
+          rootRef.current.lookAt(camera.position);
+        }
+      } catch (e) {
+        // Silently ignore if lookAt fails
+      }
     }
   });
-
-  // Group controls by top-level folders (for tabs)
-  const topLevelFolders: string[] = [];
-  const topLevelControls: typeof controls = [];
-
-  controls.forEach((control) => {
-    if (control.path.length === 2 && control.type === "folder") {
-      topLevelFolders.push(control.key);
-    } else if (control.path.length === 2 && control.type !== "folder") {
-      topLevelControls.push(control);
-    }
-  });
-
-  // Set initial active tab
-  if (tabs && activeTab === null && topLevelFolders.length > 0) {
-    setActiveTab(topLevelFolders[0]);
-  }
 
   // Render a single control
-  const renderControl = (control: (typeof controls)[0]) => {
-    const pathStr = control.path.join(".");
-    const value = values[pathStr];
+  const renderControl = useCallback(
+    (control: typeof topLevelControls[number]) => {
+      const pathStr = control.path.join(".");
+      const value = values[pathStr];
+      const config = control.config as ControlConfig;
 
-    switch (control.type) {
-      case "number": {
-        const { min = 0, max = 1, step = 0.01, label } = control.config;
+      switch (control.type) {
+        case "number": {
+        const { min = 0, max = 1, step = 0.01, label } = config;
         return (
           <Container key={pathStr} flexDirection="column" gap={4}>
             <UIText fontSize={12} color="#888">
@@ -107,17 +95,19 @@ export function XrevaPanel({
               onCheckedChange={(checked: boolean) => setValue(pathStr, checked)}
             />
             <UIText fontSize={12} color="white">
-              {control.config.label || control.key}
+              {config.label || control.key}
             </UIText>
           </Container>
         );
 
       case "select": {
-        const options = control.config.options || [];
+        const options = Array.isArray(config.options)
+          ? config.options
+          : [];
         return (
           <Container key={pathStr} flexDirection="column" gap={4}>
             <UIText fontSize={12} color="#888">
-              {control.config.label || control.key}
+              {config.label || control.key}
             </UIText>
             <Container flexDirection="row" gap={4} flexWrap="wrap">
               {options.map((option) => (
@@ -147,7 +137,7 @@ export function XrevaPanel({
         return (
           <Container key={pathStr} flexDirection="column" gap={4}>
             <UIText fontSize={12} color="#888">
-              {control.config.label || control.key}
+              {config.label || control.key}
             </UIText>
             <Container flexDirection="row" gap={8} flexWrap="wrap">
               {presetColors.map((color) => (
@@ -171,11 +161,11 @@ export function XrevaPanel({
           <Button
             key={pathStr}
             onClick={() => {
-              const fn = control.config.value;
+              const fn = config.value;
               if (typeof fn === "function") fn();
             }}
           >
-            <UIText>{control.config.label || control.key}</UIText>
+            <UIText>{config.label || control.key}</UIText>
           </Button>
         );
 
@@ -186,7 +176,7 @@ export function XrevaPanel({
         return (
           <Container key={pathStr} flexDirection="column" gap={4}>
             <UIText fontSize={12} color="#888">
-              {control.config.label || control.key}
+              {config.label || control.key}
             </UIText>
             {["x", "y", "z"].map((axis) => (
               <Container key={axis} flexDirection="column" gap={2}>
@@ -212,58 +202,52 @@ export function XrevaPanel({
       default:
         return null;
     }
-  };
+    },
+    [setValue, values],
+  );
 
   // Render controls in a folder
-  const renderFolder = (folderPath: string, folderName: string) => {
-    const folderControls = controls.filter(
-      (c) =>
-        c.path.length > 2 &&
-        c.path.slice(0, -1).join(".") === folderPath &&
-        c.type !== "folder",
-    );
+  const renderFolder = useCallback(
+    (folder: typeof folders[number]) => {
+      if (folder.controls.length === 0) return null;
 
-    if (folderControls.length === 0) return null;
-
-    return (
-      <Card key={folderPath} padding={16} gap={12}>
-        <UIText fontSize={16} fontWeight="medium" color="white">
-          {folderName}
-        </UIText>
-        <Container flexDirection="column" gap={8}>
-          {folderControls.map(renderControl)}
-        </Container>
-      </Card>
-    );
-  };
+      return (
+        <Card key={folder.path} padding={16} gap={12}>
+          <UIText fontSize={16} fontWeight="medium" color="white">
+            {folder.key}
+          </UIText>
+          <Container flexDirection="column" gap={8}>
+            {folder.controls.map((control) => renderControl(control))}
+          </Container>
+        </Card>
+      );
+    },
+    [folders, renderControl],
+  );
 
   // Render content based on tabs or no tabs
-  const renderContent = () => {
-    if (tabs && topLevelFolders.length > 0) {
+  const renderContent = useMemo(() => {
+    if (tabs && folders.length > 0) {
+      const activeFolder = folders.find((folder) => folder.key === activeTab);
+
       return (
         <>
           {/* Tab Navigation */}
           <Container flexDirection="row" gap={4} justifyContent="center">
-            {topLevelFolders.map((folder) => (
+            {folders.map((folder) => (
               <Button
-                key={folder}
-                onClick={() => setActiveTab(folder)}
-                variant={activeTab === folder ? "default" : "outline"}
+                key={folder.path}
+                onClick={() => setActiveTab(folder.key)}
+                variant={activeTab === folder.key ? "default" : "outline"}
                 size="sm"
               >
-                <UIText fontSize={10}>{folder.toUpperCase()}</UIText>
+                <UIText fontSize={10}>{folder.key.toUpperCase()}</UIText>
               </Button>
             ))}
           </Container>
 
           {/* Active Tab Content */}
-          {activeTab &&
-            renderFolder(
-              controls
-                .find((c) => c.key === activeTab && c.type === "folder")
-                ?.path.join(".") || "",
-              activeTab,
-            )}
+          {activeFolder && renderFolder(activeFolder)}
         </>
       );
     } else {
@@ -271,20 +255,14 @@ export function XrevaPanel({
       return (
         <Container flexDirection="column" gap={12}>
           {/* Top level controls */}
-          {topLevelControls.map(renderControl)}
+          {topLevelControls.map((control) => renderControl(control))}
 
           {/* Folders */}
-          {topLevelFolders.map((folder) => {
-            const folderControl = controls.find(
-              (c) => c.key === folder && c.type === "folder",
-            );
-            if (!folderControl) return null;
-            return renderFolder(folderControl.path.join("."), folder);
-          })}
+          {folders.map((folder) => renderFolder(folder))}
         </Container>
       );
     }
-  };
+  }, [activeTab, folders, renderControl, tabs, topLevelControls]);
 
   return (
     <group ref={rootRef} position={position} rotation={rotation} scale={scale}>
@@ -310,7 +288,7 @@ export function XrevaPanel({
             </UIText>
 
             {/* Content */}
-            {renderContent()}
+            {renderContent}
           </Container>
         </Defaults>
       </Root>
