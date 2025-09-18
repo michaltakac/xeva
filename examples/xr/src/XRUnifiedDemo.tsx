@@ -367,7 +367,7 @@ function XRScene() {
   const controls = useControls('UI Settings', {
     ui: {
       showPanel: { value: true },
-      panelScale: { value: 0.8, min: 0.5, max: 1.5, step: 0.1 },
+      panelScale: { value: 1.6, min: 0.5, max: 3.0, step: 0.1 },
       panelBillboard: { value: true }
     }
   })
@@ -375,7 +375,7 @@ function XRScene() {
   // Provide defaults if controls are not yet initialized
   const {
     showPanel = true,
-    panelScale = 0.8,
+    panelScale = 1.6,
     panelBillboard = true
   } = controls?.ui || {}
   
@@ -433,12 +433,10 @@ function XRScene() {
           position={[panelPosition.x, panelPosition.y, panelPosition.z]}
           rotation={[0, -0.2, 0]}
           title="XReva Controls"
-          tabs={false}
           scale={panelScale}
           billboard={panelBillboard}
           grabbable={true}
           resizable={true}
-          showSidePanel={true}
           useMaterialClass="glass"
           width={700}
           height={450}

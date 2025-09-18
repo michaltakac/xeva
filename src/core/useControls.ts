@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { useShallow } from 'zustand/react/shallow';
-import { getGlobalStore } from "./store";
 
 // Types
 export type ControlValue =
@@ -108,26 +106,7 @@ function serializeSchema(schema: ControlsSchema): string {
   });
 }
 
-function setNestedValue(
-  target: Record<string, any>,
-  path: string[],
-  value: unknown,
-): void {
-  let cursor = target;
-  for (let i = 0; i < path.length - 1; i++) {
-    const part = path[i];
-    if (cursor[part] === undefined) {
-      cursor[part] = {};
-    }
-    cursor = cursor[part];
-  }
-  cursor[path[path.length - 1]] = value;
-}
 
-function capitalize(value: string) {
-  if (!value) return value;
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
 
 // Determine control type from config/value
 function inferControlType(
@@ -237,14 +216,14 @@ function parseSchema(
 
 function normalizeControlConfig(
   item: ControlValue | ControlConfig,
-  key: string,
+  _key: string,
 ): { config: ControlConfig; value: ControlValue } {
   if (typeof item === "object" && item !== null && "value" in item) {
     const cfg = item as ControlConfig;
     const value =
       cfg.value !== undefined
         ? cfg.value
-        : resolveDefaultValue(cfg, key);
+        : resolveDefaultValue(cfg, _key);
     return {
       config: { ...cfg, value },
       value,
@@ -257,7 +236,7 @@ function normalizeControlConfig(
   };
 }
 
-function resolveDefaultValue(config: ControlConfig, key: string): ControlValue {
+function resolveDefaultValue(config: ControlConfig, _key: string): ControlValue {
   if (config.options) {
     const options = Array.isArray(config.options)
       ? config.options
@@ -271,9 +250,6 @@ function resolveDefaultValue(config: ControlConfig, key: string): ControlValue {
     return config.min;
   }
 
-  console.warn(
-    `[xreva] Control "${key}" is missing an initial value; defaulting to empty string.`,
-  );
   return "";
 }
 
@@ -302,8 +278,9 @@ export const useXrevaStore = create<XrevaStore>()(
         // Don't store button values
         if (control.type === "button") {
           // For buttons, just trigger onChange
-          if (control.config.onChange) {
-            control.config.onChange(value);
+          const onChange = control.config.onChange;
+          if (typeof onChange === 'function') {
+            onChange(value);
           }
           return { 
             controls: newControls,
@@ -312,8 +289,9 @@ export const useXrevaStore = create<XrevaStore>()(
         }
 
         // Trigger onChange callback
-        if (control.config.onChange) {
-          control.config.onChange(value);
+        const onChange = control.config.onChange;
+        if (typeof onChange === 'function') {
+          onChange(value);
         }
 
         return {
@@ -369,10 +347,6 @@ export const useXrevaStore = create<XrevaStore>()(
   })),
 );
 
-// Expose store globally for debugging in development
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  (window as any).useXrevaStore = useXrevaStore;
-}
 
 // Main hook - Leva-like API
 export function useControls(
@@ -483,20 +457,20 @@ export function useControls(
   // Get values and setters with performance optimization
   const prefix = `${name}.`;
   
-  // Use selectors to only subscribe to relevant values
-  const values = useXrevaStore(
-    useShallow((state) => {
-      const result: Record<string, ControlValue> = {};
-      Object.entries(state.values).forEach(([key, value]) => {
-        if (key === name) return;
-        if (key.startsWith(prefix)) {
-          const shortKey = key.slice(prefix.length);
-          result[shortKey] = value;
-        }
-      });
-      return result;
-    })
-  );
+  // Get all values and filter in useMemo to avoid infinite loops
+  const allValues = useXrevaStore((state) => state.values);
+  
+  const values = useMemo(() => {
+    const result: Record<string, ControlValue> = {};
+    Object.entries(allValues).forEach(([key, value]) => {
+      if (key === name) return;
+      if (key.startsWith(prefix)) {
+        const shortKey = key.slice(prefix.length);
+        result[shortKey] = value;
+      }
+    });
+    return result;
+  }, [allValues, name, prefix]);
 
   // Create setters
   const setters = useMemo(() => {
@@ -533,10 +507,6 @@ export function useControls(
       // Set value
       current[leafKey] = values[relativePath];
       
-      // Add setter method
-      if (setters[relativePath]) {
-        current[`set${capitalize(leafKey)}`] = setters[relativePath];
-      }
     });
 
     return result;

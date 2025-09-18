@@ -58,31 +58,7 @@ export type ControlType =
   | "folder"
   | "custom";
 
-export interface ControlImpl {
-  type: ControlType;
-  parse: (value: ControlValue) => ControlConfig;
-  component: React.ComponentType<{
-    control: ParsedControl;
-    value: any;
-    onChange: (value: any) => void;
-  }>;
-}
 
-export interface XRPanelProps {
-  position?: [number, number, number];
-  rotation?: [number, number, number];
-  scale?: number | [number, number, number];
-  billboard?: boolean;
-  width?: number;
-  height?: number;
-  pointerEventsOrder?: number;
-  pixelDensity?: number;
-  children?: React.ReactNode;
-}
-
-export interface XRHUDPanelProps extends Omit<XRPanelProps, "billboard"> {
-  offset?: [number, number, number];
-}
 
 export interface XRTheme {
   colors?: {

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ControlValue } from "../core/useControls";
 import { useXrevaStore } from "../core/useControls";
-import { useShallow } from 'zustand/react/shallow';
 
 type StoreState = ReturnType<typeof useXrevaStore.getState>;
 type ControlData = ReturnType<StoreState["getAllControls"]>[number];
@@ -31,8 +30,7 @@ export interface PanelState {
 export function usePanelState(tabsEnabled: boolean): PanelState {
   // Use selectors to only subscribe to what we need
   const controls = useXrevaStore(state => state.controlsArray);
-  const folders = useXrevaStore(state => state.folders);
-  const values = useXrevaStore(useShallow(state => state.values));
+  const values = useXrevaStore(state => state.values);
   const setValue = useXrevaStore(state => state.setValue);
   
   // Structure computation

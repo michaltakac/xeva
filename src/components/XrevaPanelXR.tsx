@@ -18,8 +18,6 @@ import {
   MenuIcon,
   ExpandIcon,
   SettingsIcon,
-  ListIcon,
-  GripIcon,
 } from "@react-three/uikit-lucide";
 import { Handle, HandleStore, HandleTarget } from '@react-three/handle';
 import { useXRGrab } from "../xr/useXRGrab";
@@ -95,7 +93,6 @@ interface XrevaPanelXRProps {
     smoothing?: number;
   };
   resizable?: boolean;
-  showSidePanel?: boolean;
 
   // Callbacks
   onGrab?: () => void;
@@ -171,7 +168,6 @@ export function XrevaPanelXR({
   backgroundColor = "#0a0a0a",
   borderRadius = 16,
   title = "XReva Controls",
-  tabs = true,
   backgroundOpacity = 0.95,
   useMaterialClass = "glass",
   dualHandMode = false,
@@ -180,7 +176,6 @@ export function XrevaPanelXR({
   billboard = true,
   anchor,
   resizable = true,
-  showSidePanel: initialShowSidePanel = true,
   onGrab,
   onRelease,
   onMove,
@@ -188,8 +183,8 @@ export function XrevaPanelXR({
   onPoint,
   onResize,
 }: XrevaPanelXRProps) {
-  const { values, setValue, folders, topLevelControls, activeTab, setActiveTab } =
-    usePanelState(tabs);
+  const { values, setValue, folders, topLevelControls } =
+    usePanelState(false);
   
   const groupRef = useRef<THREE.Group | null>(null);
   const storeRef = useRef<HandleStore<any>>(null);
@@ -199,16 +194,10 @@ export function XrevaPanelXR({
   // Reactive signals for dimensions
   const [height, setHeight] = useState(initialHeight);
   const [width, setWidth] = useState(initialWidth);
-  const [menuWidth, setMenuWidth] = useState(200);
-  const showSidePanel = useMemo(() => width > 500 && initialShowSidePanel, [width, initialShowSidePanel]);
-  const sidePanelDisplay = useMemo(() => (showSidePanel ? 'flex' : 'none'), [showSidePanel]);
-  const borderLeftRadius = useMemo(() => (showSidePanel ? 0 : borderRadius), [showSidePanel, borderRadius]);
-  const paddingLeft = useMemo(() => (showSidePanel ? 20 : 0), [showSidePanel]);
   
   // Store initial dimensions for scaling
   const initialMaxHeight = useRef<number>(undefined);
   const initialWidthRef = useRef<number>(undefined);
-  const containerRef = useRef<ComponentInternals>(null);
   const resizeContainerRef = useRef<ComponentInternals>(null);
   
   // Handle ref proxy for resize handle - using Container's interactionPanel
@@ -491,87 +480,7 @@ export function XrevaPanelXR({
     [setValue, values],
   );
 
-  // Render controls in a folder
-  const renderFolder = useCallback(
-    (folder: typeof folders[number]) => {
-      if (folder.controls.length === 0) return null;
 
-      return (
-        <Container
-          key={folder.path}
-          flexDirection="column"
-          gap={16}
-          backgroundColor={colors.card}
-          borderRadius={12}
-          padding={20}
-          panelMaterialClass={getMaterialClass}
-          borderBend={0.3}
-          borderWidth={2}
-        >
-          <UIText fontSize={16} fontWeight="semi-bold" color={colors.cardForeground}>
-            {folder.key}
-          </UIText>
-          <Container flexDirection="column" gap={12}>
-            {folder.controls.map((control) => renderControl(control))}
-          </Container>
-        </Container>
-      );
-    },
-    [folders, renderControl, getMaterialClass],
-  );
-
-  // Width resize handle component
-  const WidthHandle = useCallback(() => {
-    const handleContainerRef = useRef<ComponentInternals>(null);
-    const widthHandleRef = useMemo(
-      () => new Proxy<RefObject<THREE.Object3D | null>>(
-        { current: null },
-        { get: () => handleContainerRef.current?.interactionPanel }
-      ),
-      [],
-    );
-    const initialWidthHandle = useRef<number>(undefined);
-
-    if (!resizable || !showSidePanel) return null;
-
-    return (
-      <Handle
-        apply={(state) => {
-          if (state.first) {
-            initialWidthHandle.current = menuWidth;
-          } else if (initialWidthHandle.current != null && handleContainerRef.current != null) {
-            const newWidth = clamp(
-              initialWidthHandle.current + state.offset.position.x / (handleContainerRef.current as any).pixelSize.value,
-              150,
-              300
-            );
-            setMenuWidth(newWidth);
-          }
-        }}
-        handleRef={widthHandleRef}
-        targetRef="from-context"
-        scale={false}
-        multitouch={false}
-        rotate={false}
-      >
-        <Container
-          ref={handleContainerRef}
-          positionType="absolute"
-          height="90%"
-          maxHeight={200}
-          positionRight={-20}
-          positionTop="50%"
-          transformTranslateY="-50%"
-          width={10}
-          backgroundColor="white"
-          backgroundOpacity={0.2}
-          borderRadius={5}
-          hover={{ backgroundOpacity: 0.5 }}
-          cursor="pointer"
-        />
-      </Handle>
-    );
-  }, [resizable, showSidePanel, menuWidth, innerTargetRef]);
 
   // Bottom bar handle component
   const BarHandle = forwardRef<HandleStore<any>, {}>((_props, ref) => {
@@ -621,57 +530,86 @@ export function XrevaPanelXR({
     );
   });
 
-  // Render content based on tabs or sidebar navigation
+  // State for managing which folders are expanded
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(
+    () => new Set(folders.length > 0 ? [folders[0].key] : [])
+  );
+
+  const toggleFolder = useCallback((folderKey: string) => {
+    setExpandedFolders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(folderKey)) {
+        newSet.delete(folderKey);
+      } else {
+        newSet.add(folderKey);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Render content with collapsible folders
   const renderContent = useMemo(() => {
-    if (tabs && folders.length > 0) {
-      // Tabs mode - show tab buttons and active folder content
-      const activeFolder = folders.find((folder) => folder.key === activeTab);
-      return (
-        <>
-          <Container flexDirection="row" gap={8} justifyContent="center" marginBottom={16}>
-            {folders.map((folder) => (
-              <Button
-                key={folder.path}
-                onClick={() => setActiveTab(folder.key)}
-                variant={activeTab === folder.key ? "default" : "ghost"}
-                size="sm"
-              >
-                <UIText fontSize={12}>
-                  {folder.key.toUpperCase()}
-                </UIText>
-              </Button>
-            ))}
+    return (
+      <Container flexDirection="column" gap={20} width="100%">
+        {/* Render top-level controls if any */}
+        {topLevelControls.length > 0 && (
+          <Container flexDirection="column" gap={12}>
+            {topLevelControls.map((control) => renderControl(control))}
           </Container>
-          {activeFolder && renderFolder(activeFolder)}
-        </>
-      );
-    } else if (showSidePanel && folders.length > 0) {
-      // Sidebar mode - show all folders but with display none/flex based on active
-      return (
-        <Container flexDirection="column" gap={20}>
-          {folders.map((folder) => (
-            <Container
+        )}
+        
+        {/* Render folders as collapsible sections */}
+        {folders.map((folder) => {
+          if (folder.controls.length === 0) return null;
+          const isExpanded = expandedFolders.has(folder.key);
+          
+          return (
+            <Container 
               key={folder.key}
-              display={folder.key === activeTab ? "flex" : "none"}
-              flexDirection="column"
-              gap={20}
+              flexDirection="column" 
+              backgroundColor={colors.card}
+              borderRadius={12}
+              overflow="hidden"
               width="100%"
+              panelMaterialClass={getMaterialClass}
+              borderBend={0.3}
+              borderWidth={2}
             >
-              {renderFolder(folder)}
+              {/* Folder Header */}
+              <Container 
+                padding={16}
+                cursor="pointer"
+                onClick={() => toggleFolder(folder.key)}
+                flexDirection="row"
+                alignItems="center"
+                justifyContent="space-between"
+                backgroundColor={colors.background}
+                backgroundOpacity={0.3}
+                hover={{
+                  backgroundColor: colors.accent,
+                  backgroundOpacity: 0.5
+                }}
+              >
+                <UIText fontSize={16} fontWeight="semi-bold" color={colors.foreground}>
+                  {folder.key}
+                </UIText>
+                <UIText fontSize={14} color={colors.mutedForeground}>
+                  {isExpanded ? '▼' : '▶'}
+                </UIText>
+              </Container>
+              
+              {/* Folder Content */}
+              {isExpanded && (
+                <Container flexDirection="column" gap={12} padding={16}>
+                  {folder.controls.map((control) => renderControl(control))}
+                </Container>
+              )}
             </Container>
-          ))}
-        </Container>
-      );
-    } else {
-      // No sidebar or tabs - show everything
-      return (
-        <Container flexDirection="column" gap={20}>
-          {topLevelControls.map((control) => renderControl(control))}
-          {folders.map((folder) => renderFolder(folder))}
-        </Container>
-      );
-    }
-  }, [activeTab, folders, renderControl, renderFolder, tabs, topLevelControls, setActiveTab, showSidePanel]);
+          );
+        })}
+      </Container>
+    );
+  }, [folders, renderControl, topLevelControls, expandedFolders, toggleFolder, getMaterialClass]);
 
   return (
     <group position-y={-0.3}>
@@ -768,90 +706,28 @@ export function XrevaPanelXR({
                     </Container>
 
                     {/* Main Content Area */}
-                    <Container width="100%" flexDirection="row" flexGrow={1}>
-                      {/* Side Panel */}
-                      {showSidePanel && (
-                        <Container
-                          display={sidePanelDisplay}
-                          flexDirection="column"
-                          borderLeftRadius={borderRadius}
-                          backgroundColor="#555555"
-                          borderColor="#555555"
-                          panelMaterialClass={getMaterialClass}
-                          borderWidth={4}
-                          borderRightWidth={2}
-                          borderBend={0.4}
-                          width={menuWidth}
-                          height="100%"
-                          padding={16}
-                          gapRow={16}
-                        >
-                          {/* Temporarily disabled - causing parent mismatch <WidthHandle /> */}
-                          <UIText marginBottom={8} fontSize={20} fontWeight="semi-bold" color={colors.cardForeground}>
-                            Categories
-                          </UIText>
-
-                          {folders.map((folder) => (
-                            <Container
-                              key={folder.key}
-                              flexDirection="row"
-                              alignItems="center"
-                              justifyContent="space-between"
-                              cursor="pointer"
-                              onClick={() => setActiveTab(folder.key)}
-                              padding={8}
-                              borderRadius={8}
-                              backgroundColor={activeTab === folder.key ? "#4080ff" : colors.background}
-                              backgroundOpacity={activeTab === folder.key ? 0.3 : 0}
-                              borderWidth={activeTab === folder.key ? 2 : 0}
-                              borderColor="#4080ff"
-                              hover={{ 
-                                backgroundColor: activeTab === folder.key ? "#4080ff" : colors.accent, 
-                                backgroundOpacity: activeTab === folder.key ? 0.4 : 0.2 
-                              }}
-                            >
-                              <UIText 
-                                color={activeTab === folder.key ? "#4080ff" : colors.cardForeground}
-                                fontWeight={activeTab === folder.key ? "bold" : "normal"}
-                              >
-                                {folder.key}
-                              </UIText>
-                              {folder.key === "Grid" ? (
-                                <GripIcon width={16} color={activeTab === folder.key ? "#4080ff" : colors.cardForeground} />
-                              ) : (
-                                <ListIcon width={16} color={activeTab === folder.key ? "#4080ff" : colors.cardForeground} />
-                              )}
-                            </Container>
-                          ))}
-                        </Container>
-                      )}
-
-                      {/* Main Panel */}
-                      <Container
-                        flexGrow={1}
-                        scrollbarBorderRadius={4}
-                        scrollbarOpacity={0.2}
-                        flexDirection="column"
-                        overflow="scroll"
-                        paddingLeft={paddingLeft}
-                        panelMaterialClass={getMaterialClass}
-                        borderBend={0.4}
-                        backgroundColor={panelBackgroundColor}
-                        backgroundOpacity={backgroundOpacity}
-                        borderRadius={borderRadius}
-                        borderLeftRadius={borderLeftRadius}
-                        borderWidth={4}
-                        borderLeftWidth={0}
+                    <Container
+                      width="100%"
+                      flexGrow={1}
+                      scrollbarBorderRadius={4}
+                      scrollbarOpacity={0.2}
+                      flexDirection="column"
+                      overflow="scroll"
+                      panelMaterialClass={getMaterialClass}
+                      borderBend={0.4}
+                      backgroundColor={panelBackgroundColor}
+                      backgroundOpacity={backgroundOpacity}
+                      borderRadius={borderRadius}
+                      borderWidth={4}
+                    >
+                      <Container 
+                        flexShrink={0} 
+                        display="flex" 
+                        flexDirection="column" 
+                        gapRow={16} 
+                        padding={32}
                       >
-                        <Container 
-                          flexShrink={0} 
-                          display="flex" 
-                          flexDirection="column" 
-                          gapRow={16} 
-                          padding={32}
-                        >
-                          {renderContent}
-                        </Container>
+                        {renderContent}
                       </Container>
                     </Container>
                   </Container>
