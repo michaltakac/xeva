@@ -6,7 +6,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    port: 3000
+    port: 3000,
+    sourcemapType: 'source-map'
+  },
+  css: {
+    devSourcemap: true
   },
   resolve: {
     alias: {
@@ -30,6 +34,9 @@ export default defineConfig({
     ]
   },
   build: {
+    sourcemap: true
+  },
+  esbuild: {
     sourcemap: true
   },
   root: __dirname,

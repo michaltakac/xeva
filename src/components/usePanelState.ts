@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { shallow } from "zustand/shallow";
 import type { ControlValue } from "../core/useControls";
 import { useXrevaStore } from "../core/useControls";
+import { useShallow } from 'zustand/react/shallow';
 
 type StoreState = ReturnType<typeof useXrevaStore.getState>;
 type ControlData = ReturnType<StoreState["getAllControls"]>[number];
@@ -18,15 +18,6 @@ interface PanelStructure {
   folders: FolderInfo[];
 }
 
-function controlsArrayEquality(a: ControlData[], b: ControlData[]) {
-  if (a === b) return true;
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
 export interface PanelState {
   values: Record<string, ControlValue>;
   setValue: (path: string, value: ControlValue) => void;
@@ -38,15 +29,13 @@ export interface PanelState {
 }
 
 export function usePanelState(tabsEnabled: boolean): PanelState {
-  const controls = useXrevaStore(
-    useCallback((state) => {
-      return state.getAllControls();
-    }, []),
-    controlsArrayEquality,
-  );
-  const values = useXrevaStore((state) => state.values, shallow);
-  const setValue = useXrevaStore((state) => state.setValue);
-
+  // Use selectors to only subscribe to what we need
+  const controls = useXrevaStore(state => state.controlsArray);
+  const folders = useXrevaStore(state => state.folders);
+  const values = useXrevaStore(useShallow(state => state.values));
+  const setValue = useXrevaStore(state => state.setValue);
+  
+  // Structure computation
   const structure = useMemo<PanelStructure>(() => {
     const topLevelControls: ControlData[] = [];
     const folderMap = new Map<string, FolderInfo>();
@@ -62,7 +51,7 @@ export function usePanelState(tabsEnabled: boolean): PanelState {
         folderMap.set(pathStr, {
           key: control.key,
           path: pathStr,
-          config: control.config as Record<string, unknown>,
+          config: control.config as any,
           controls: [],
         });
         return;
@@ -78,12 +67,12 @@ export function usePanelState(tabsEnabled: boolean): PanelState {
     });
 
     // Ensure folder controls maintain insertion order
-    const folders = Array.from(folderMap.values());
-    folders.forEach((folder) => {
+    const foldersList = Array.from(folderMap.values());
+    foldersList.forEach((folder) => {
       folder.controls.sort((a, b) => a.path.join(".").localeCompare(b.path.join(".")));
     });
 
-    return { topLevelControls, folders };
+    return { topLevelControls, folders: foldersList };
   }, [controls]);
 
   const [activeTab, setActiveTabState] = useState<string | null>(null);

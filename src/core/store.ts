@@ -14,7 +14,7 @@ import { Color, Vector2, Vector3 } from "three";
 
 interface XRControlsState {
   schemas: Map<string, ControlsSchema>;
-  values: Map<string, any>;
+  values: Map<string, any>; // Plain values
   controls: Map<string, ParsedControl>;
   folders: Map<string, FolderConfig>;
   subscriptions: Map<string, Set<(value: any) => void>>;
@@ -40,13 +40,12 @@ export type XRControlsStore = ReturnType<typeof createXRControlsStore>;
 export function createXRControlsStore() {
   return createStore<XRControlsState & XRControlsActions>()((set, get) => ({
     schemas: new Map(),
-    values: new Map(),
+    values: new Map(), // Map of signals
     controls: new Map(),
     folders: new Map(),
     subscriptions: new Map(),
 
     registerSchema: (id, schema, _options = {}) => {
-      // const state = get()
       const parsedControls = parseSchema(id, schema);
 
       set((state) => {
@@ -58,14 +57,16 @@ export function createXRControlsStore() {
         newSchemas.set(id, schema);
 
         parsedControls.forEach((control) => {
-          newControls.set(control.path.join("."), control);
+          const controlPath = control.path.join(".");
+          newControls.set(controlPath, control);
 
-          if (!newValues.has(control.path.join("."))) {
-            newValues.set(control.path.join("."), control.value);
+          if (!newValues.has(controlPath)) {
+            // Store plain value
+            newValues.set(controlPath, control.value);
           }
 
           if (control.type === "folder") {
-            newFolders.set(control.path.join("."), control.config as any);
+            newFolders.set(controlPath, control.config as any);
           }
         });
 
@@ -111,25 +112,26 @@ export function createXRControlsStore() {
 
     setValue: (path, value) => {
       const control = get().controls.get(path);
+      
       if (!control) return;
 
+      // Update the value
       set((state) => {
         const newValues = new Map(state.values);
         newValues.set(path, value);
-
-        // Notify subscribers
-        const subs = state.subscriptions.get(path);
-        if (subs) {
-          subs.forEach((callback) => callback(value));
-        }
-
-        // Call onChange if defined
-        if (control.config.onChange) {
-          control.config.onChange(value);
-        }
-
         return { values: newValues };
       });
+
+      // Notify subscribers
+      const subs = get().subscriptions.get(path);
+      if (subs) {
+        subs.forEach((callback) => callback(value));
+      }
+
+      // Call onChange if defined
+      if (control.config.onChange) {
+        control.config.onChange(value);
+      }
     },
 
     subscribe: (path, callback) => {
@@ -140,6 +142,7 @@ export function createXRControlsStore() {
         newSubs.set(path, pathSubs);
         return { subscriptions: newSubs };
       });
+
 
       return () => {
         set((state) => {

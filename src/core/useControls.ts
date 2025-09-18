@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef } from "react";
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
+import { useShallow } from 'zustand/react/shallow';
+import { getGlobalStore } from "./store";
 
 // Types
 export type ControlValue =
@@ -62,8 +64,8 @@ interface FolderState {
 interface XrevaStore {
   controls: Map<string, ControlData>;
   values: Record<string, ControlValue>;
-  folders: Map<string, FolderState>; // folder path -> state
-  controlsArray: ControlData[]; // Cached array of controls
+  folders: Map<string, FolderState>;
+  controlsArray: ControlData[];
 
   register: (path: string, config: ControlConfig | FolderConfig) => void;
   setValue: (path: string, value: ControlValue) => void;
@@ -275,7 +277,7 @@ function resolveDefaultValue(config: ControlConfig, key: string): ControlValue {
   return "";
 }
 
-// Global store
+// Global Zustand store with performance optimizations
 export const useXrevaStore = create<XrevaStore>()(
   subscribeWithSelector((set, get) => ({
     controls: new Map(),
@@ -297,18 +299,21 @@ export const useXrevaStore = create<XrevaStore>()(
         newControls.set(path, { ...control, value });
         const newControlsArray = Array.from(newControls.values());
 
-        // Call onChange if provided
-        const onChange = (control.config as ControlConfig).onChange;
-        if (typeof onChange === "function") {
-          onChange(value);
-        }
-
         // Don't store button values
         if (control.type === "button") {
+          // For buttons, just trigger onChange
+          if (control.config.onChange) {
+            control.config.onChange(value);
+          }
           return { 
             controls: newControls,
             controlsArray: newControlsArray
           };
+        }
+
+        // Trigger onChange callback
+        if (control.config.onChange) {
+          control.config.onChange(value);
         }
 
         return {
@@ -327,18 +332,18 @@ export const useXrevaStore = create<XrevaStore>()(
     },
 
     getValues: (prefix) => {
-      const allValues = get().values;
-      if (!prefix) return { ...allValues };
+      const values = get().values;
+      if (!prefix) return values;
 
-      const filtered: Record<string, ControlValue> = {};
-      Object.keys(allValues).forEach((key) => {
+      const result: Record<string, ControlValue> = {};
+      Object.entries(values).forEach(([key, value]) => {
         if (key === prefix) return;
         if (key.startsWith(`${prefix}.`)) {
-          const shortKey = key.slice(prefix.length + 1); // +1 for the dot
-          filtered[shortKey] = allValues[key];
+          const shortKey = key.slice(prefix.length + 1);
+          result[shortKey] = value;
         }
       });
-      return filtered;
+      return result;
     },
 
     getAllControls: () => {
@@ -354,10 +359,20 @@ export const useXrevaStore = create<XrevaStore>()(
     },
 
     reset: () => {
-      set({ controls: new Map(), values: {}, folders: new Map(), controlsArray: [] });
+      set({ 
+        controls: new Map(), 
+        values: {}, 
+        folders: new Map(), 
+        controlsArray: [] 
+      });
     },
   })),
 );
+
+// Expose store globally for debugging in development
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  (window as any).useXrevaStore = useXrevaStore;
+}
 
 // Main hook - Leva-like API
 export function useControls(
@@ -390,18 +405,7 @@ export function useControls(
     [schemaSignature, name],
   );
 
-  const fallbackValues = useMemo(() => {
-    const fallback: Record<string, ControlValue> = {};
-    Object.entries(parsedSchema.values).forEach(([path, value]) => {
-      if (path.startsWith(`${name}.`)) {
-        const shortKey = path.slice(name.length + 1);
-        fallback[shortKey] = value;
-      }
-    });
-    return fallback;
-  }, [parsedSchema, name]);
-
-  // Initialize controls on first render
+  // Initialize controls on first render or when schema changes
   useEffect(() => {
     const hasChanged = schemaSignatureRef.current !== schemaSignature;
 
@@ -411,6 +415,7 @@ export function useControls(
         const newValues = { ...state.values };
         const newFolders = new Map(state.folders);
 
+        // Clear old controls
         const prefix = `${name}.`;
         Array.from(newControls.keys()).forEach((key) => {
           if (key === name || key.startsWith(prefix)) {
@@ -420,12 +425,15 @@ export function useControls(
           }
         });
 
+        // Add new controls
         parsedSchema.controls.forEach((control, controlPath) => {
           newControls.set(controlPath, control);
         });
+        
         Object.entries(parsedSchema.values).forEach(([path, value]) => {
           newValues[path] = value;
         });
+        
         parsedSchema.folders.forEach((folder, folderPath) => {
           newFolders.set(folderPath, folder);
         });
@@ -470,54 +478,64 @@ export function useControls(
         schemaSignatureRef.current = null;
       }
     };
-  }, [schemaSignature, name, parsedSchema]);
+  }, [schemaSignature, name]);
 
-  // Subscribe to value changes
-  const storeValues = useXrevaStore((state) => state.values);
-  const values = useMemo(() => {
-    const scoped: Record<string, ControlValue> = { ...fallbackValues };
-    const prefix = `${name}.`;
-
-    Object.entries(storeValues).forEach(([path, value]) => {
-      if (path === name) return;
-      if (path.startsWith(prefix)) {
-        scoped[path.slice(prefix.length)] = value;
-      }
-    });
-
-    return scoped;
-  }, [storeValues, fallbackValues, name]);
+  // Get values and setters with performance optimization
+  const prefix = `${name}.`;
+  
+  // Use selectors to only subscribe to relevant values
+  const values = useXrevaStore(
+    useShallow((state) => {
+      const result: Record<string, ControlValue> = {};
+      Object.entries(state.values).forEach(([key, value]) => {
+        if (key === name) return;
+        if (key.startsWith(prefix)) {
+          const shortKey = key.slice(prefix.length);
+          result[shortKey] = value;
+        }
+      });
+      return result;
+    })
+  );
 
   // Create setters
   const setters = useMemo(() => {
     const s: Record<string, (value: any) => void> = {};
-    Object.keys(values).forEach((key) => {
-      s[key] = (value: any) => store.setValue(`${name}.${key}`, value);
+    Object.keys(parsedSchema.values).forEach((path) => {
+      if (path === name) return;
+      if (path.startsWith(prefix)) {
+        const key = path.slice(prefix.length);
+        s[key] = (value: any) => store.setValue(path, value);
+      }
     });
     return s;
-  }, [name, values]);
+  }, [name, schemaSignature, store]);
 
-  // Return values with setters
+  // Return proxy object with nested structure
   return useMemo(() => {
     const result: Record<string, any> = {};
-
-    Object.entries(values).forEach(([relativePath, value]) => {
+    
+    // Build nested structure
+    Object.keys(values).forEach((relativePath) => {
       const parts = relativePath.split(".");
-      setNestedValue(result, parts, value);
-
-      const setter = setters[relativePath];
-      if (setter) {
-        const leafKey = parts[parts.length - 1];
-        const parentPath = parts.slice(0, -1);
-        let parent = result as Record<string, any>;
-        parentPath.forEach((segment) => {
-          parent = parent[segment];
-        });
-
-        Object.defineProperty(parent, `set${capitalize(leafKey)}`, {
-          value: setter,
-          enumerable: false,
-        });
+      
+      // Create nested path
+      let current = result;
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!current[parts[i]]) {
+          current[parts[i]] = {};
+        }
+        current = current[parts[i]];
+      }
+      
+      const leafKey = parts[parts.length - 1];
+      
+      // Set value
+      current[leafKey] = values[relativePath];
+      
+      // Add setter method
+      if (setters[relativePath]) {
+        current[`set${capitalize(leafKey)}`] = setters[relativePath];
       }
     });
 

@@ -100,5 +100,9 @@
     "typescript": "^5.9.2",
     "vite": "^5.4.11",
     "zustand": "^5.0.8"
+  },
+  "dependencies": {
+    "@preact/signals-react": "^3.3.0",
+    "@react-three/handle": "^6.6.26"
   }
 }
